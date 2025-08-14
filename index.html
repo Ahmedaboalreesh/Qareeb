@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة تأجير السيارات بين الأشخاص</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <i class="fas fa-car"></i>
+                    <span>كار شير</span>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#home" class="nav-link">الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#cars" class="nav-link">السيارات</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#how-it-works" class="nav-link">كيف يعمل</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#about" class="nav-link">من نحن</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contact" class="nav-link">اتصل بنا</a>
+                    </li>
+                </ul>
+                <div class="nav-auth">
+                    <button class="btn-login">تسجيل الدخول</button>
+                    <button class="btn-register">إنشاء حساب</button>
+                </div>
+                <div class="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">أجّر سيارتك أو استأجر سيارة بسهولة</h1>
+                <p class="hero-description">
+                    منصة آمنة وموثوقة لتأجير السيارات بين الأشخاص. وفر المال واربح من سيارتك الخاصة
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn-primary">ابحث عن سيارة</button>
+                    <button class="btn-secondary">أجّر سيارتك</button>
+                </div>
+                <div class="search-box">
+                    <div class="search-field">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" placeholder="أين تريد استئجار سيارة؟">
+                    </div>
+                    <div class="search-field">
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="date" placeholder="تاريخ البداية">
+                    </div>
+                    <div class="search-field">
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="date" placeholder="تاريخ النهاية">
+                    </div>
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                        ابحث
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="سيارة للإيجار">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">لماذا تختار كار شير؟</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>أمان مضمون</h3>
+                    <p>جميع السيارات مؤمنة وفحص شامل للسائقين لضمان سلامتك</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h3>أسعار منافسة</h3>
+                    <p>وفر حتى 60% مقارنة بشركات تأجير السيارات التقليدية</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>متاح 24/7</h3>
+                    <p>احجز واستلم سيارتك في أي وقت يناسبك</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>سهولة الاستخدام</h3>
+                    <p>تطبيق بسيط وسهل للحجز والدفع والتواصل</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">كيف يعمل؟</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>ابحث واختر</h3>
+                        <p>ابحث عن السيارة المناسبة في منطقتك واختر التواريخ</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>احجز وادفع</h3>
+                        <p>احجز السيارة بنقرة واحدة وادفع بأمان عبر التطبيق</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>استلم وقُد</h3>
+                        <p>التق بمالك السيارة واستلم المفاتيح وانطلق في رحلتك</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cars Section -->
+    <section id="cars" class="cars">
+        <div class="container">
+            <h2 class="section-title">السيارات المتاحة</h2>
+            <div class="cars-grid">
+                <div class="car-card">
+                    <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="سيارة اقتصادية">
+                    <div class="car-info">
+                        <h3>هيونداي إلنترا 2022</h3>
+                        <p class="car-price">150 ريال/اليوم</p>
+                        <div class="car-features">
+                            <span><i class="fas fa-users"></i> 5 مقاعد</span>
+                            <span><i class="fas fa-cog"></i> أوتوماتيك</span>
+                            <span><i class="fas fa-gas-pump"></i> بنزين</span>
+                        </div>
+                        <button class="btn-book">احجز الآن</button>
+                    </div>
+                </div>
+                <div class="car-card">
+                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="سيارة رياضية">
+                    <div class="car-info">
+                        <h3>بي إم دبليو 320i</h3>
+                        <p class="car-price">300 ريال/اليوم</p>
+                        <div class="car-features">
+                            <span><i class="fas fa-users"></i> 5 مقاعد</span>
+                            <span><i class="fas fa-cog"></i> أوتوماتيك</span>
+                            <span><i class="fas fa-gas-pump"></i> بنزين</span>
+                        </div>
+                        <button class="btn-book">احجز الآن</button>
+                    </div>
+                </div>
+                <div class="car-card">
+                    <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="سيارة عائلية">
+                    <div class="car-info">
+                        <h3>تويوتا كامري 2023</h3>
+                        <p class="car-price">200 ريال/اليوم</p>
+                        <div class="car-features">
+                            <span><i class="fas fa-users"></i> 5 مقاعد</span>
+                            <span><i class="fas fa-cog"></i> أوتوماتيك</span>
+                            <span><i class="fas fa-gas-pump"></i> هجين</span>
+                        </div>
+                        <button class="btn-book">احجز الآن</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">ماذا يقول عملاؤنا</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"تجربة رائعة! السيارة كانت نظيفة والمالك متعاون جداً. أنصح بالتجربة"</p>
+                    <div class="testimonial-author">
+                        <strong>أحمد محمد</strong>
+                        <span>الرياض</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"وفرت كثير من المال مقارنة بشركات التأجير الأخرى. خدمة ممتازة"</p>
+                    <div class="testimonial-author">
+                        <strong>فاطمة العلي</strong>
+                        <span>جدة</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"أؤجر سيارتي عبر المنصة وأحصل على دخل إضافي ممتاز. التطبيق سهل جداً"</p>
+                    <div class="testimonial-author">
+                        <strong>خالد السعد</strong>
+                        <span>الدمام</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-car"></i>
+                        <span>كار شير</span>
+                    </div>
+                    <p>منصة آمنة وموثوقة لتأجير السيارات بين الأشخاص في المملكة العربية السعودية</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#cars">السيارات</a></li>
+                        <li><a href="#how-it-works">كيف يعمل</a></li>
+                        <li><a href="#about">من نحن</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>الدعم</h3>
+                    <ul>
+                        <li><a href="#">مركز المساعدة</a></li>
+                        <li><a href="#">الشروط والأحكام</a></li>
+                        <li><a href="#">سياسة الخصوصية</a></li>
+                        <li><a href="#">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تواصل معنا</h3>
+                    <div class="contact-info">
+                        <p><i class="fas fa-phone"></i> 920012345</p>
+                        <p><i class="fas fa-envelope"></i> info@carshare.sa</p>
+                        <p><i class="fas fa-map-marker-alt"></i> الرياض، المملكة العربية السعودية</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 كار شير. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
