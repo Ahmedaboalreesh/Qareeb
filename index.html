@@ -81,74 +81,74 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Money Counter Section -->
+
+    <!-- Money Counter Section -->
                 <div class="money-counter-inline">
-                    <div class="counter-header">
-                        <h2>احسب أرباحك الشهرية</h2>
-                        <p>حرك المؤشر لترى كم يمكنك ربحه من تأجير سيارتك - دعم الاقتصاد التشاركي</p>
+                <div class="counter-header">
+                    <h2>احسب أرباحك الشهرية</h2>
+                    <p>حرك المؤشر لترى كم يمكنك ربحه من تأجير سيارتك - دعم الاقتصاد التشاركي</p>
+                </div>
+                
+                <div class="counter-display">
+                    <div class="amount-display">
+                        <span class="amount" id="monthlyAmount">0</span>
+                        <span class="currency">ريال سعودي</span>
                     </div>
-                    
-                    <div class="counter-display">
-                        <div class="amount-display">
-                            <span class="amount" id="monthlyAmount">0</span>
-                            <span class="currency">ريال سعودي</span>
-                        </div>
-                        <div class="daily-rate">
-                            <i class="fas fa-coins"></i>
-                            <span>150 ريال يومياً</span>
-                        </div>
+                    <div class="daily-rate">
+                        <i class="fas fa-coins"></i>
+                        <span>150 ريال يومياً</span>
                     </div>
-                    
-                    <div class="timeline-container">
-                        <div class="timeline-labels">
-                            <span>اليوم 1</span>
-                            <span>اليوم 15</span>
-                            <span>اليوم 30</span>
+                </div>
+                
+                <div class="timeline-container">
+                    <div class="timeline-labels">
+                        <span>اليوم 1</span>
+                        <span>اليوم 15</span>
+                        <span>اليوم 30</span>
+                    </div>
+                    <div class="timeline-slider">
+                        <input type="range" id="daySlider" min="1" max="30" value="1" class="slider">
+                        <div class="slider-track">
+                            <div class="slider-fill" id="sliderFill"></div>
                         </div>
-                        <div class="timeline-slider">
-                            <input type="range" id="daySlider" min="1" max="30" value="1" class="slider">
-                            <div class="slider-track">
-                                <div class="slider-fill" id="sliderFill"></div>
-                            </div>
-                            <div class="slider-thumb" id="sliderThumb">
-                                <i class="fas fa-calendar-day"></i>
-                            </div>
-                        </div>
-                        <div class="day-indicator">
-                            <span id="currentDay">اليوم 1</span>
+                        <div class="slider-thumb" id="sliderThumb">
+                            <i class="fas fa-calendar-day"></i>
                         </div>
                     </div>
-                    
-                    <div class="counter-stats">
-                        <div class="stat-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <div class="stat-content">
-                                <span class="stat-value" id="totalDays">1</span>
-                                <span class="stat-label">يوم</span>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <div class="stat-content">
-                                <span class="stat-value" id="totalEarnings">150</span>
-                                <span class="stat-label">ريال</span>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-chart-line"></i>
-                            <div class="stat-content">
-                                <span class="stat-value" id="monthlyProjection">4,500</span>
-                                <span class="stat-label">ريال شهرياً</span>
-                            </div>
+                    <div class="day-indicator">
+                        <span id="currentDay">اليوم 1</span>
+                    </div>
+                </div>
+                
+                <div class="counter-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div class="stat-content">
+                            <span class="stat-value" id="totalDays">1</span>
+                            <span class="stat-label">يوم</span>
                         </div>
                     </div>
-                    
-                    <div class="cta-section">
-                        <button class="btn btn-primary" onclick="window.location.href='register.html'">
-                            <i class="fas fa-car"></i>
-                            ابدأ في ربح المال الآن
-                        </button>
+                    <div class="stat-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div class="stat-content">
+                            <span class="stat-value" id="totalEarnings">150</span>
+                            <span class="stat-label">ريال</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="stat-content">
+                            <span class="stat-value" id="monthlyProjection">4,500</span>
+                            <span class="stat-label">ريال شهرياً</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cta-section">
+                    <button class="btn btn-primary" onclick="window.location.href='register.html'">
+                        <i class="fas fa-car"></i>
+                        ابدأ في ربح المال الآن
+                    </button>
                     </div>
                 </div>
                 
@@ -576,7 +576,7 @@
             
             <div class="footer-bottom">
                 <div class="footer-bottom-content">
-                    <p>&copy; 2024 شارك سيارتك. جميع الحقوق محفوظة.</p>
+                <p>&copy; 2024 شارك سيارتك. جميع الحقوق محفوظة.</p>
                     <div class="footer-bottom-links">
                         <a href="privacy.html">سياسة الخصوصية</a>
                         <a href="terms.html">الشروط والأحكام</a>

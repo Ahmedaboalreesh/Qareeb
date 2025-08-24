@@ -81,27 +81,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Mock authentication function (replace with actual API call)
+    // Authentication function using localStorage
     async function authenticateUser(email, password, userType) {
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // For demonstration purposes, accept any email/password combination
-        // In a real application, this would validate against your backend
-        if (email && password) {
-            return {
-                token: 'mock-jwt-token-' + Date.now(),
-                user: {
-                    id: 1,
+        try {
+            // Get users from localStorage
+            const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+            
+            // Find user by email
+            const user = users.find(u => u.email === email);
+            
+            if (user && user.password === password && user.user_type === userType) {
+                return {
+                    token: 'mock-jwt-token-' + Date.now(),
+                    user: {
+                        id: user.id,
+                        full_name: user.full_name,
+                        email: user.email,
+                        phone: user.phone,
+                        city: user.city,
+                        user_type: user.user_type
+                    }
+                };
+            }
+            
+            // If no user found, create a demo user for testing
+            if (email && password) {
+                console.log('🔧 Creating demo user for testing...');
+                
+                const demoUser = {
+                    id: 'demo-user-' + Date.now(),
                     full_name: userType === 'owner' ? 'أحمد محمد' : 'سارة أحمد',
                     email: email,
                     phone: '+966501234567',
                     city: 'الرياض',
-                    user_type: userType
-                }
-            };
+                    password: password,
+                    user_type: userType,
+                    created_at: new Date().toISOString(),
+                    is_active: true
+                };
+                
+                // Add demo user to localStorage
+                users.push(demoUser);
+                localStorage.setItem('mockUsers', JSON.stringify(users));
+                
+                // Create sample data for demo user
+                createSampleDataForUser(demoUser.id, userType);
+                
+                return {
+                    token: 'mock-jwt-token-' + Date.now(),
+                    user: {
+                        id: demoUser.id,
+                        full_name: demoUser.full_name,
+                        email: demoUser.email,
+                        phone: demoUser.phone,
+                        city: demoUser.city,
+                        user_type: demoUser.user_type
+                    }
+                };
+            }
+            
+            return null;
+            
+        } catch (error) {
+            console.error('❌ Authentication error:', error);
+            return null;
         }
-        return null;
     }
 
     // Email validation
