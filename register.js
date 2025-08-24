@@ -1,4 +1,4 @@
-// Registration page functionality
+// Registration page functionality - Works with localStorage only
 document.addEventListener('DOMContentLoaded', function() {
     const registerForm = document.getElementById('registerForm');
     const inputs = document.querySelectorAll('.input-group input, .input-group select');
@@ -152,53 +152,71 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
             submitBtn.disabled = true;
             
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             try {
                 // Prepare user data
                 const userData = {
+                    id: 'user-' + Date.now(),
                     full_name: document.getElementById('fullName').value,
                     email: document.getElementById('email').value,
                     phone: document.getElementById('phone').value,
                     city: document.getElementById('city').value,
-                    password: document.getElementById('password').value
+                    password: document.getElementById('password').value,
+                    user_type: selectedUserType,
+                    created_at: new Date().toISOString(),
+                    is_active: true
                 };
                 
-                // Send registration request
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                });
+                // Check if email already exists
+                const existingUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+                const emailExists = existingUsers.find(user => user.email === userData.email);
                 
-                const result = await response.json();
-                
-                if (response.ok) {
-                    // Save token and user data
-                    localStorage.setItem('userToken', result.token);
-                    localStorage.setItem('userData', JSON.stringify(result.user));
-                    localStorage.setItem('userType', selectedUserType);
-                    
-                    // Success message
-                    showSuccessMessage();
-                    
-                    // Reset form
-                    registerForm.reset();
-                    
-                    // Redirect to appropriate dashboard after 2 seconds
-                    setTimeout(() => {
-                        if (selectedUserType === 'owner') {
-                            window.location.href = 'dashboard.html';
-                        } else {
-                            window.location.href = 'renter-dashboard.html';
-                        }
-                    }, 2000);
-                } else {
-                    showErrorMessage(result.error || 'حدث خطأ أثناء إنشاء الحساب');
+                if (emailExists) {
+                    showErrorMessage('البريد الإلكتروني مستخدم بالفعل');
+                    return;
                 }
+                
+                // Add user to localStorage
+                existingUsers.push(userData);
+                localStorage.setItem('mockUsers', JSON.stringify(existingUsers));
+                
+                // Create mock token
+                const token = 'mock-token-' + Date.now();
+                
+                // Save user session data
+                localStorage.setItem('userToken', token);
+                localStorage.setItem('userData', JSON.stringify(userData));
+                localStorage.setItem('userType', selectedUserType);
+                
+                // Create sample data for the new user
+                createSampleDataForUser(userData.id, selectedUserType);
+                
+                // Success message
+                showSuccessMessage();
+                
+                // Reset form
+                registerForm.reset();
+                
+                // Redirect to appropriate dashboard after 2 seconds
+                setTimeout(() => {
+                    if (selectedUserType === 'owner') {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        window.location.href = 'renter-dashboard.html';
+                    }
+                }, 2000);
+                
             } catch (error) {
                 console.error('Registration error:', error);
-                showErrorMessage('حدث خطأ في الاتصال بالخادم');
+                
+                // Check if it's a network error
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showErrorMessage('حدث خطأ في الاتصال. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+                } else {
+                    showErrorMessage('حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.');
+                }
             } finally {
                 // Reset button
                 submitBtn.innerHTML = originalText;
@@ -383,3 +401,108 @@ document.addEventListener('DOMContentLoaded', function() {
         document.head.appendChild(style);
     }
 });
+
+// Create sample data for the new user
+function createSampleDataForUser(userId, userType) {
+    try {
+        console.log('🔧 Creating sample data for new user:', userId, userType);
+        
+        if (userType === 'owner') {
+            // Create sample cars for car owner
+            const sampleCars = [
+                {
+                    id: 'car-' + Date.now(),
+                    owner_id: userId,
+                    brand: 'تويوتا',
+                    model: 'كامري',
+                    year: '2023',
+                    color: 'أبيض',
+                    transmission: 'أوتوماتيك',
+                    fuel_type: 'بنزين',
+                    daily_rate: 200,
+                    location: 'الرياض',
+                    description: 'سيارة فاخرة ومريحة للرحلات الطويلة',
+                    features: ['مكيف', 'نظام صوت', 'كاميرا خلفية', 'ABS'],
+                    photos: [],
+                    is_available: true,
+                    created_at: new Date().toISOString()
+                }
+            ];
+            
+            // Save sample cars
+            const existingCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+            existingCars.push(...sampleCars);
+            localStorage.setItem('mockCars', JSON.stringify(existingCars));
+            
+            // Create sample bookings
+            const sampleBookings = [
+                {
+                    id: 'booking-' + Date.now(),
+                    car_id: sampleCars[0].id,
+                    car_name: 'تويوتا كامري 2023',
+                    renter_id: 'sample-renter',
+                    renter_name: 'أحمد محمد',
+                    owner_id: userId,
+                    start_date: '2024-01-15',
+                    end_date: '2024-01-18',
+                    status: 'pending',
+                    total_amount: 600,
+                    daily_rate: 200,
+                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+                }
+            ];
+            
+            // Save sample bookings
+            const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+            existingBookings.push(...sampleBookings);
+            localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
+            
+        } else {
+            // Create sample bookings for renter
+            const sampleBookings = [
+                {
+                    id: 'booking-' + Date.now(),
+                    car_id: 'sample-car',
+                    car_name: 'هونداي أكسنت 2022',
+                    renter_id: userId,
+                    renter_name: document.getElementById('fullName').value,
+                    owner_id: 'sample-owner',
+                    start_date: '2024-01-20',
+                    end_date: '2024-01-22',
+                    status: 'approved',
+                    total_amount: 300,
+                    daily_rate: 100,
+                    created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+                }
+            ];
+            
+            // Save sample bookings
+            const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+            existingBookings.push(...sampleBookings);
+            localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
+        }
+        
+        // Create sample notifications
+        const sampleNotifications = [
+            {
+                id: 'notification-' + Date.now(),
+                user_id: userId,
+                type: 'welcome',
+                title: 'مرحباً بك في منصة شارك سيارتك!',
+                description: 'شكراً لك على الانضمام إلينا. نتمنى لك تجربة ممتعة!',
+                is_read: false,
+                created_at: new Date().toISOString()
+            }
+        ];
+        
+        // Save sample notifications
+        const existingNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+        existingNotifications.push(...sampleNotifications);
+        localStorage.setItem('mockNotifications', JSON.stringify(existingNotifications));
+        
+        console.log('✅ Sample data created successfully for user:', userId);
+        
+    } catch (error) {
+        console.error('❌ Error creating sample data:', error);
+    }
+}
