@@ -24,17 +24,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup filter tabs
     setupFilterTabs();
+    
+    // Add refresh functionality
+    setupRefreshButton();
+    
+    // Listen for storage changes to auto-refresh
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'mockBookings') {
+            console.log('🔄 Detected booking updates, refreshing...');
+            loadBookings();
+        }
+    });
 });
+
+// Setup refresh button
+function setupRefreshButton() {
+    const refreshBtn = document.getElementById('refreshBookings');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            this.classList.add('rotating');
+            loadBookings();
+            setTimeout(() => {
+                this.classList.remove('rotating');
+            }, 1000);
+        });
+    }
+}
 
 // Load bookings with mock data
 async function loadBookings() {
     try {
+        console.log('🔄 Loading bookings...');
+        
         // Get mock bookings from localStorage
         let mockBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
         
         // Get current user ID
         const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
         const currentUserId = currentUser.id || 1;
+        
+        console.log(`👤 Current user ID: ${currentUserId}`);
+        console.log(`📊 Total bookings in storage: ${mockBookings.length}`);
         
         // Get cars data for fixing car names
         const cars = JSON.parse(localStorage.getItem('mockCars') || '[]');
@@ -72,10 +102,16 @@ async function loadBookings() {
         }
         
         // Filter bookings for current user
-        mockBookings = mockBookings.filter(booking => booking.renter_id === currentUserId);
+        const userBookings = mockBookings.filter(booking => booking.renter_id === currentUserId);
+        
+        console.log(`📋 User bookings found: ${userBookings.length}`);
+        userBookings.forEach(booking => {
+            console.log(`  - Booking ${booking.id}: ${booking.car_name} (${booking.status})`);
+        });
         
         // Add some sample bookings if none exist
-        if (mockBookings.length === 0) {
+        if (userBookings.length === 0) {
+            console.log('📝 No bookings found, creating sample bookings...');
             const sampleBookings = [
                 {
                     id: 1,
@@ -147,9 +183,11 @@ async function loadBookings() {
             displayBookings(sampleBookings);
             updateStats(sampleBookings);
         } else {
-            displayBookings(mockBookings);
-            updateStats(mockBookings);
+            displayBookings(userBookings);
+            updateStats(userBookings);
         }
+        
+        console.log('✅ Bookings loaded successfully');
         
     } catch (error) {
         console.error('Error loading bookings:', error);

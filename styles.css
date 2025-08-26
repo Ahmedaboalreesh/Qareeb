@@ -5149,6 +5149,12 @@ body {
     padding: 1rem 0;
 }
 
+.results-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .results-count {
     font-size: 1.1rem;
     font-weight: 600;
@@ -5953,12 +5959,68 @@ body {
     margin-bottom: 2rem;
 }
 
+/* Filter Tabs Container */
+.filter-tabs-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 20px;
+}
+
 .filter-tabs {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    margin-bottom: 2rem;
     flex-wrap: wrap;
+    flex: 1;
+}
+
+.refresh-section {
+    display: flex;
+    align-items: center;
+}
+
+.refresh-section .btn {
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.refresh-section .btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.refresh-section .btn.rotating i {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive design for filter tabs container */
+@media (max-width: 768px) {
+    .filter-tabs-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .filter-tabs {
+        justify-content: center;
+    }
+    
+    .refresh-section {
+        justify-content: center;
+    }
 }
 
 .tab-btn {

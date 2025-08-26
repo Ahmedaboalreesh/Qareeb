@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Create comprehensive sample notifications if none exist
-    createComprehensiveSampleNotifications();
+    // Initialize real notifications system
+    initializeRealNotifications();
     
     // Load notifications
     loadNotifications();
@@ -22,8 +22,566 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update notification badge
     updateNotificationBadge();
     
+    // Listen for real-time events
+    setupRealTimeNotifications();
+    
     console.log('✅ Notifications page initialized');
 });
+
+// Initialize real notifications system
+function initializeRealNotifications() {
+    try {
+        console.log('🔔 Initializing real notifications system...');
+        
+        // Get user data
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const userType = localStorage.getItem('userType');
+        
+        if (!userData.id) {
+            console.log('⚠️ No user data found, skipping real notifications initialization');
+            return;
+        }
+        
+        // Create real notifications based on user type and actual events
+        if (userType === 'renter') {
+            createRenterRealNotifications(userData);
+        } else if (userType === 'owner') {
+            createOwnerRealNotifications(userData);
+        }
+        
+        console.log('✅ Real notifications system initialized');
+        
+    } catch (error) {
+        console.error('Error initializing real notifications:', error);
+    }
+}
+
+// Create real notifications for renters
+function createRenterRealNotifications(userData) {
+    try {
+        console.log('🔔 Creating real notifications for renter...');
+        
+        const mockNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+        const mockBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+        const mockCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+        
+        // Clear existing notifications for this user
+        const userNotifications = mockNotifications.filter(n => n.user_id !== userData.id);
+        
+        // Get user's bookings
+        const userBookings = mockBookings.filter(booking => booking.renter_id === userData.id);
+        
+        const realNotifications = [];
+        
+        // Create notifications for each booking
+        userBookings.forEach((booking, index) => {
+            const car = mockCars.find(c => c.id === booking.car_id);
+            const carName = car ? `${car.brand} ${car.model} ${car.year}` : booking.car_name || 'سيارة غير محددة';
+            
+            // Booking created notification
+            realNotifications.push({
+                id: `booking-created-${booking.id}`,
+                user_id: userData.id,
+                type: 'booking_created',
+                title: 'تم إنشاء طلب الحجز',
+                description: `تم إنشاء طلب حجز السيارة ${carName} بنجاح`,
+                related_id: booking.id,
+                related_type: 'booking',
+                is_read: false,
+                created_at: booking.created_at || new Date().toISOString(),
+                car_name: carName,
+                booking_amount: booking.total_amount,
+                booking_dates: `${booking.start_date} - ${booking.end_date}`
+            });
+            
+            // Booking status updates
+            if (booking.status === 'approved') {
+                realNotifications.push({
+                    id: `booking-approved-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_status_updated',
+                    title: 'تمت الموافقة على الحجز',
+                    description: `تمت الموافقة على حجز السيارة ${carName} من قبل صاحب السيارة`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    old_status: 'pending',
+                    new_status: 'approved'
+                });
+            } else if (booking.status === 'rejected') {
+                realNotifications.push({
+                    id: `booking-rejected-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_status_updated',
+                    title: 'تم رفض طلب الحجز',
+                    description: `تم رفض طلب حجز السيارة ${carName} من قبل صاحب السيارة`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    old_status: 'pending',
+                    new_status: 'rejected',
+                    rejection_reason: booking.owner_notes || 'لم يتم تحديد سبب'
+                });
+            } else if (booking.status === 'completed') {
+                realNotifications.push({
+                    id: `booking-completed-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_completed',
+                    title: 'تم إكمال الحجز',
+                    description: `تم إكمال حجز السيارة ${carName} بنجاح`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    total_paid: booking.total_amount
+                });
+            }
+            
+            // Payment notifications
+            if (booking.status === 'approved' && booking.total_amount) {
+                realNotifications.push({
+                    id: `payment-required-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'payment_required',
+                    title: 'مطلوب دفع مبلغ الحجز',
+                    description: `يرجى دفع مبلغ ${booking.total_amount} ريال لحجز السيارة ${carName}`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+                    car_name: carName,
+                    payment_amount: booking.total_amount
+                });
+            }
+        });
+        
+        // Add system notifications
+        realNotifications.push({
+            id: 'welcome-renter',
+            user_id: userData.id,
+            type: 'system',
+            title: 'مرحباً بك في منصة شارك سيارتك',
+            description: 'يمكنك الآن تصفح السيارات المتاحة وحجز السيارة المناسبة لك',
+            related_id: null,
+            related_type: 'system',
+            is_read: false,
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+        });
+        
+        // Save real notifications
+        localStorage.setItem('mockNotifications', JSON.stringify([...userNotifications, ...realNotifications]));
+        
+        console.log(`✅ Created ${realNotifications.length} real notifications for renter`);
+        
+    } catch (error) {
+        console.error('Error creating renter real notifications:', error);
+    }
+}
+
+// Create real notifications for car owners
+function createOwnerRealNotifications(userData) {
+    try {
+        console.log('🔔 Creating real notifications for car owner...');
+        
+        const mockNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+        const mockBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+        const mockCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+        
+        // Clear existing notifications for this user
+        const userNotifications = mockNotifications.filter(n => n.user_id !== userData.id);
+        
+        // Get user's cars
+        const userCars = mockCars.filter(car => car.owner_id === userData.id);
+        
+        // Get bookings for user's cars
+        const carBookings = mockBookings.filter(booking => {
+            const car = mockCars.find(c => c.id === booking.car_id);
+            return car && car.owner_id === userData.id;
+        });
+        
+        const realNotifications = [];
+        
+        // Create notifications for each booking
+        carBookings.forEach((booking, index) => {
+            const car = mockCars.find(c => c.id === booking.car_id);
+            const carName = car ? `${car.brand} ${car.model} ${car.year}` : booking.car_name || 'سيارة غير محددة';
+            
+            // New booking request notification
+            if (booking.status === 'pending') {
+                realNotifications.push({
+                    id: `new-booking-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'new_booking_request',
+                    title: 'طلب حجز جديد',
+                    description: `طلب المستأجر حجز السيارة ${carName} لمدة ${getBookingDuration(booking)}`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.created_at || new Date().toISOString(),
+                    car_name: carName,
+                    renter_name: booking.renter_name || 'مستأجر',
+                    duration: getBookingDuration(booking),
+                    amount: booking.total_amount
+                });
+            }
+            
+            // Booking status updates
+            if (booking.status === 'approved') {
+                realNotifications.push({
+                    id: `booking-approved-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_status_updated',
+                    title: 'تمت الموافقة على الحجز',
+                    description: `تمت الموافقة على حجز السيارة ${carName}`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    old_status: 'pending',
+                    new_status: 'approved'
+                });
+            } else if (booking.status === 'rejected') {
+                realNotifications.push({
+                    id: `booking-rejected-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_status_updated',
+                    title: 'تم رفض طلب الحجز',
+                    description: `تم رفض طلب حجز السيارة ${carName}`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    old_status: 'pending',
+                    new_status: 'rejected'
+                });
+            } else if (booking.status === 'completed') {
+                realNotifications.push({
+                    id: `booking-completed-${booking.id}`,
+                    user_id: userData.id,
+                    type: 'booking_completed',
+                    title: 'تم إكمال الحجز',
+                    description: `تم إكمال حجز السيارة ${carName} بنجاح`,
+                    related_id: booking.id,
+                    related_type: 'booking',
+                    is_read: false,
+                    created_at: booking.updated_at || new Date().toISOString(),
+                    car_name: carName,
+                    total_earnings: booking.total_amount
+                });
+            }
+        });
+        
+        // Add system notifications
+        realNotifications.push({
+            id: 'welcome-owner',
+            user_id: userData.id,
+            type: 'system',
+            title: 'مرحباً بك في منصة شارك سيارتك',
+            description: 'يمكنك الآن إضافة سياراتك وإدارة الحجوزات',
+            related_id: null,
+            related_type: 'system',
+            is_read: false,
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+        });
+        
+        // Save real notifications
+        localStorage.setItem('mockNotifications', JSON.stringify([...userNotifications, ...realNotifications]));
+        
+        console.log(`✅ Created ${realNotifications.length} real notifications for car owner`);
+        
+    } catch (error) {
+        console.error('Error creating owner real notifications:', error);
+    }
+}
+
+// Helper function to calculate booking duration
+function getBookingDuration(booking) {
+    if (!booking.start_date || !booking.end_date) {
+        return 'غير محدد';
+    }
+    
+    const startDate = new Date(booking.start_date);
+    const endDate = new Date(booking.end_date);
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return 'يوم واحد';
+    } else if (diffDays === 2) {
+        return 'يومان';
+    } else {
+        return `${diffDays} أيام`;
+    }
+}
+
+// Create new notification for real events
+function createNotification(eventType, eventData) {
+    try {
+        console.log(`🔔 Creating notification for event: ${eventType}`, eventData);
+        
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const userType = localStorage.getItem('userType');
+        
+        if (!userData.id) {
+            console.log('⚠️ No user data found, skipping notification creation');
+            return;
+        }
+        
+        const mockNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+        let newNotification = null;
+        
+        switch (eventType) {
+            case 'booking_created':
+                newNotification = createBookingCreatedNotification(eventData, userData, userType);
+                break;
+            case 'booking_status_updated':
+                newNotification = createBookingStatusUpdatedNotification(eventData, userData, userType);
+                break;
+            case 'booking_completed':
+                newNotification = createBookingCompletedNotification(eventData, userData, userType);
+                break;
+            case 'payment_received':
+                newNotification = createPaymentReceivedNotification(eventData, userData, userType);
+                break;
+            case 'review_received':
+                newNotification = createReviewReceivedNotification(eventData, userData, userType);
+                break;
+            case 'photo_uploaded':
+                newNotification = createPhotoUploadedNotification(eventData, userData, userType);
+                break;
+            default:
+                console.log(`⚠️ Unknown event type: ${eventType}`);
+                return;
+        }
+        
+        if (newNotification) {
+            // Add to notifications
+            const updatedNotifications = [newNotification, ...mockNotifications];
+            localStorage.setItem('mockNotifications', JSON.stringify(updatedNotifications));
+            
+            // Update notification badge
+            updateNotificationBadge();
+            
+            console.log(`✅ Created notification: ${newNotification.title}`);
+        }
+        
+    } catch (error) {
+        console.error('Error creating notification:', error);
+    }
+}
+
+// Create booking created notification
+function createBookingCreatedNotification(bookingData, userData, userType) {
+    const carName = bookingData.car_name || 'سيارة غير محددة';
+    
+    if (userType === 'renter') {
+        return {
+            id: `booking-created-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'booking_created',
+            title: 'تم إنشاء طلب الحجز',
+            description: `تم إنشاء طلب حجز السيارة ${carName} بنجاح`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            booking_amount: bookingData.total_amount,
+            booking_dates: `${bookingData.start_date} - ${bookingData.end_date}`
+        };
+    } else if (userType === 'owner') {
+        return {
+            id: `new-booking-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'new_booking_request',
+            title: 'طلب حجز جديد',
+            description: `طلب المستأجر حجز السيارة ${carName} لمدة ${getBookingDuration(bookingData)}`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            renter_name: bookingData.renter_name || 'مستأجر',
+            duration: getBookingDuration(bookingData),
+            amount: bookingData.total_amount
+        };
+    }
+}
+
+// Create booking status updated notification
+function createBookingStatusUpdatedNotification(bookingData, userData, userType) {
+    const carName = bookingData.car_name || 'سيارة غير محددة';
+    const statusText = getStatusText(bookingData.status);
+    
+    if (userType === 'renter') {
+        return {
+            id: `booking-status-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'booking_status_updated',
+            title: `تم ${statusText} الحجز`,
+            description: `تم ${statusText.toLowerCase()} حجز السيارة ${carName}`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            old_status: bookingData.old_status || 'pending',
+            new_status: bookingData.status
+        };
+    } else if (userType === 'owner') {
+        return {
+            id: `booking-status-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'booking_status_updated',
+            title: `تم ${statusText} الحجز`,
+            description: `تم ${statusText.toLowerCase()} حجز السيارة ${carName}`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            old_status: bookingData.old_status || 'pending',
+            new_status: bookingData.status
+        };
+    }
+}
+
+// Create booking completed notification
+function createBookingCompletedNotification(bookingData, userData, userType) {
+    const carName = bookingData.car_name || 'سيارة غير محددة';
+    
+    if (userType === 'renter') {
+        return {
+            id: `booking-completed-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'booking_completed',
+            title: 'تم إكمال الحجز',
+            description: `تم إكمال حجز السيارة ${carName} بنجاح`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            total_paid: bookingData.total_amount
+        };
+    } else if (userType === 'owner') {
+        return {
+            id: `booking-completed-${bookingData.id}-${Date.now()}`,
+            user_id: userData.id,
+            type: 'booking_completed',
+            title: 'تم إكمال الحجز',
+            description: `تم إكمال حجز السيارة ${carName} بنجاح`,
+            related_id: bookingData.id,
+            related_type: 'booking',
+            is_read: false,
+            created_at: new Date().toISOString(),
+            car_name: carName,
+            total_earnings: bookingData.total_amount
+        };
+    }
+}
+
+// Helper function to get status text
+function getStatusText(status) {
+    const statusMap = {
+        'approved': 'الموافقة على',
+        'rejected': 'رفض',
+        'completed': 'إكمال',
+        'cancelled': 'إلغاء'
+    };
+    return statusMap[status] || status;
+}
+
+// Setup real-time notifications monitoring
+function setupRealTimeNotifications() {
+    try {
+        console.log('🔔 Setting up real-time notifications monitoring...');
+        
+        // Listen for storage changes
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'mockBookings') {
+                console.log('🔔 Detected booking changes, checking for new notifications...');
+                checkForNewNotifications();
+            }
+        });
+        
+        // Also listen for local changes (same tab)
+        let lastBookingsData = localStorage.getItem('mockBookings');
+        
+        // Check for changes every 5 seconds
+        setInterval(() => {
+            const currentBookingsData = localStorage.getItem('mockBookings');
+            if (currentBookingsData !== lastBookingsData) {
+                console.log('🔔 Detected local booking changes, checking for new notifications...');
+                lastBookingsData = currentBookingsData;
+                checkForNewNotifications();
+            }
+        }, 5000);
+        
+        console.log('✅ Real-time notifications monitoring setup complete');
+        
+    } catch (error) {
+        console.error('Error setting up real-time notifications:', error);
+    }
+}
+
+// Check for new notifications based on booking changes
+function checkForNewNotifications() {
+    try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const userType = localStorage.getItem('userType');
+        const mockBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+        const mockNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+        
+        if (!userData.id) {
+            return;
+        }
+        
+        // Get relevant bookings based on user type
+        let relevantBookings = [];
+        if (userType === 'renter') {
+            relevantBookings = mockBookings.filter(booking => booking.renter_id === userData.id);
+        } else if (userType === 'owner') {
+            const mockCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+            relevantBookings = mockBookings.filter(booking => {
+                const car = mockCars.find(c => c.id === booking.car_id);
+                return car && car.owner_id === userData.id;
+            });
+        }
+        
+        // Check each booking for new notifications
+        relevantBookings.forEach(booking => {
+            const existingNotification = mockNotifications.find(n => 
+                n.related_id === booking.id && 
+                n.type === 'booking_status_updated' &&
+                n.new_status === booking.status
+            );
+            
+            if (!existingNotification) {
+                // Create new notification for status change
+                if (booking.status === 'approved' || booking.status === 'rejected' || booking.status === 'completed') {
+                    const car = JSON.parse(localStorage.getItem('mockCars') || '[]').find(c => c.id === booking.car_id);
+                    const bookingData = {
+                        ...booking,
+                        car_name: car ? `${car.brand} ${car.model} ${car.year}` : booking.car_name
+                    };
+                    
+                    createNotification('booking_status_updated', bookingData);
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error checking for new notifications:', error);
+    }
+}
 
 // Check authentication
 function checkAuth() {
