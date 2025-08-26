@@ -662,10 +662,14 @@ async function updateBookingStatus(bookingId, status) {
         // Find and update booking
         const bookingIndex = bookings.findIndex(booking => booking.id === bookingId);
         if (bookingIndex !== -1) {
-            bookings[bookingIndex].status = status;
+            const booking = bookings[bookingIndex];
+            booking.status = status;
             if (ownerNotes) {
-                bookings[bookingIndex].owner_notes = ownerNotes;
+                booking.owner_notes = ownerNotes;
             }
+            
+            // Update car status based on booking status
+            await updateCarStatusBasedOnBooking(booking.car_id, status);
             
             // Save back to localStorage
             localStorage.setItem('mockBookings', JSON.stringify(bookings));
@@ -683,6 +687,61 @@ async function updateBookingStatus(bookingId, status) {
     } catch (error) {
         console.error('Error updating booking status:', error);
         showMessage('حدث خطأ أثناء تحديث حالة الحجز', 'error');
+    }
+}
+
+// Update car status based on booking status
+async function updateCarStatusBasedOnBooking(carId, bookingStatus) {
+    try {
+        console.log(`🔄 Updating car ${carId} status based on booking status: ${bookingStatus}`);
+        
+        // Get cars from localStorage
+        const cars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+        
+        // Find the car
+        const carIndex = cars.findIndex(car => car.id === carId);
+        if (carIndex !== -1) {
+            const car = cars[carIndex];
+            
+            // Update car status based on booking status
+            switch (bookingStatus) {
+                case 'approved':
+                    // When booking is approved, car becomes unavailable
+                    car.status = 'booked';
+                    car.available = false;
+                    console.log(`🚗 Car ${carId} marked as booked`);
+                    break;
+                    
+                case 'completed':
+                    // When booking is completed, car becomes available again
+                    car.status = 'active';
+                    car.available = true;
+                    console.log(`🚗 Car ${carId} marked as active (available)`);
+                    break;
+                    
+                case 'rejected':
+                    // When booking is rejected, car becomes available again
+                    car.status = 'active';
+                    car.available = true;
+                    console.log(`🚗 Car ${carId} marked as active (available)`);
+                    break;
+                    
+                default:
+                    // For other statuses, keep current status
+                    console.log(`🚗 Car ${carId} status unchanged: ${car.status}`);
+                    break;
+            }
+            
+            // Save updated cars back to localStorage
+            localStorage.setItem('mockCars', JSON.stringify(cars));
+            console.log(`✅ Car status updated successfully`);
+            
+        } else {
+            console.error(`❌ Car with ID ${carId} not found`);
+        }
+    } catch (error) {
+        console.error('Error updating car status:', error);
+        throw error;
     }
 }
 

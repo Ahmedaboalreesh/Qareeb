@@ -92,16 +92,50 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup search filters
     setupSearchFilters();
+    
+    // Listen for storage changes to auto-refresh cars
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'mockCars') {
+            console.log('🔄 Detected car updates, refreshing cars list...');
+            loadCars();
+        }
+    });
+    
+    // Add refresh functionality
+    setupRefreshButton();
 });
+
+// Setup refresh button
+function setupRefreshButton() {
+    const refreshBtn = document.getElementById('refreshCars');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            this.classList.add('rotating');
+            loadCars();
+            setTimeout(() => {
+                this.classList.remove('rotating');
+            }, 1000);
+        });
+    }
+}
 
 // Load cars with mock data
 async function loadCars() {
     try {
+        console.log('🔄 Loading cars for browsing...');
+        
         // Get cars from localStorage (added by users)
         const userCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+        console.log(`📊 Total cars in storage: ${userCars.length}`);
+        
+        // Log car statuses for debugging
+        userCars.forEach(car => {
+            console.log(`  - Car ${car.id}: ${car.brand} ${car.model} (${car.status})`);
+        });
         
         // Filter only active cars
         const activeCars = userCars.filter(car => car.status === 'active');
+        console.log(`✅ Active cars found: ${activeCars.length}`);
         
         // Add some default cars if no user cars exist
         let allCars = [...activeCars];

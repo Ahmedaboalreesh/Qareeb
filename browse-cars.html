@@ -123,15 +123,23 @@
                 <div class="results-count">
                     <span id="resultsCount">0</span> سيارة متاحة
                 </div>
-                <div class="sort-options">
-                    <label for="sortBy">ترتيب حسب:</label>
-                    <select id="sortBy" onchange="sortCars()">
-                        <option value="recommended">الأكثر توصية</option>
-                        <option value="price-low">السعر: من الأقل للأعلى</option>
-                        <option value="price-high">السعر: من الأعلى للأقل</option>
-                        <option value="rating">التقييم</option>
-                        <option value="newest">الأحدث</option>
-                    </select>
+                <div class="results-actions">
+                    <div class="sort-options">
+                        <label for="sortBy">ترتيب حسب:</label>
+                        <select id="sortBy" onchange="sortCars()">
+                            <option value="recommended">الأكثر توصية</option>
+                            <option value="price-low">السعر: من الأقل للأعلى</option>
+                            <option value="price-high">السعر: من الأعلى للأقل</option>
+                            <option value="rating">التقييم</option>
+                            <option value="newest">الأحدث</option>
+                        </select>
+                    </div>
+                    <div class="refresh-section">
+                        <button class="btn btn-outline" id="refreshCars" title="تحديث السيارات">
+                            <i class="fas fa-sync-alt"></i>
+                            تحديث
+                        </button>
+                    </div>
                 </div>
             </div>
 
