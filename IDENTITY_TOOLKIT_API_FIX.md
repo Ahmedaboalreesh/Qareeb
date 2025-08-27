@@ -139,3 +139,4 @@ https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/ov
 - ✅ رسائل خطأ واضحة
 - ✅ نظام تسجيل يعمل بشكل كامل
 - ✅ جميع وظائف Firebase Authentication متاحة
+

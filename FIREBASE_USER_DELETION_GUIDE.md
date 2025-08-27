@@ -173,3 +173,4 @@ const result = await firebaseService.registerUser(userData);
 - راجع `FIREBASE_MIGRATION_GUIDE.md` للحصول على دليل مفصل
 - استخدم `test-firebase-integration.html` لاختبار الوظائف
 - تحقق من Firebase Console لإدارة المشروع
+
