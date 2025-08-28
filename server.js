@@ -7,10 +7,10 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
-const { ref, remove } = require('./firebase-config');
+const { supabase } = require('./supabase-config');
 require('dotenv').config();
 
-const db = require('./database/firebase-db');
+const db = require('./database/supabase-db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +32,7 @@ app.use(limiter);
 app.use(express.static(path.join(__dirname)));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure multer for memory storage (for Firebase Storage)
+// Configure multer for memory storage (for Supabase Storage)
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
