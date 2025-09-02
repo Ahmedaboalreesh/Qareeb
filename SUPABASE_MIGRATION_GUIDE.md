@@ -6,261 +6,289 @@ This guide will help you migrate your car rental platform from Firebase to Supab
 
 ### 1. Install Dependencies
 ```bash
-npm install @supabase/supabase-js
+npm install
 ```
 
-### 2. Set Up Supabase Project
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Get your project URL and anon key from the project settings
-3. Update the configuration in `supabase-config.js`
-
-### 3. Run Database Migration
+### 2. Initialize Supabase Database
 ```bash
-# Run the SQL migration in your Supabase SQL editor
-# Copy and paste the contents of database/supabase-migration.sql
+npm run init-supabase
 ```
 
-### 4. Test the Connection
-```bash
-npm run test-supabase
+### 3. Update Your HTML Files
+Replace Firebase SDK with Supabase SDK in your HTML files:
+
+**Before (Firebase):**
+```html
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
 ```
 
-## 📁 New Files Created
+**After (Supabase):**
+```html
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+```
 
-### Configuration Files
-- `supabase-config.js` - Server-side Supabase configuration
-- `supabase-client-config.js` - Client-side Supabase configuration
+### 4. Update JavaScript Files
+Replace Firebase service calls with Supabase service calls:
 
-### Service Files
-- `supabase-service.js` - Main Supabase service (replaces firebase-service.js)
-- `database/supabase-db.js` - Database service (replaces firebase-db.js)
-- `database/supabase-init.js` - Database initialization (replaces firebase-init.js)
-
-### Migration Files
-- `database/supabase-migration.sql` - SQL schema migration
-- `test-supabase.js` - Connection test script
-
-## 🔧 Configuration Updates
-
-### Update supabase-config.js
-Replace the placeholder values with your actual Supabase credentials:
-
+**Before (Firebase):**
 ```javascript
-const supabaseUrl = 'https://your-project-id.supabase.co';
-const supabaseKey = 'your-actual-anon-key';
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+// Create user
+const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 ```
 
-### Update supabase-client-config.js
-Update the client configuration with your actual credentials:
-
+**After (Supabase):**
 ```javascript
-const supabaseConfig = {
-    url: 'https://your-project-id.supabase.co',
-    anonKey: 'your-actual-anon-key'
-};
-```
+// Initialize Supabase
+const supabase = window.supabase;
 
-## 📊 Database Schema
-
-The migration creates the following tables:
-
-### Core Tables
-- `users` - User profiles and authentication data
-- `cars` - Car listings with owner information
-- `bookings` - Rental bookings and reservations
-- `car_photos` - Car image references
-- `notifications` - User notifications
-- `reviews` - User reviews and ratings
-- `payments` - Payment transaction records
-
-### Features
-- UUID primary keys for better security
-- Foreign key constraints for data integrity
-- Row Level Security (RLS) policies for access control
-- Automatic timestamp updates
-- Indexes for optimal performance
-
-## 🔄 API Changes
-
-### Authentication
-- Firebase Auth → Supabase Auth
-- Same methods: `signUp`, `signInWithPassword`, `signOut`
-- Real-time auth state changes
-
-### Database Operations
-- Firebase Realtime Database → Supabase PostgreSQL
-- CRUD operations remain similar
-- Real-time subscriptions via PostgreSQL changes
-
-### Storage
-- Firebase Storage → Supabase Storage
-- Same file upload/download operations
-- Public URL generation
-
-## 🛠️ Code Migration Steps
-
-### 1. Update Service Imports
-Replace Firebase service imports with Supabase:
-
-```javascript
-// Old
-import { firebaseService } from './firebase-service.js';
-
-// New
-import { supabaseService } from './supabase-service.js';
-```
-
-### 2. Update Authentication
-```javascript
-// Old Firebase
-const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-
-// New Supabase
+// Create user
 const { data, error } = await supabase.auth.signUp({
     email: email,
     password: password
 });
 ```
 
-### 3. Update Database Operations
-```javascript
-// Old Firebase
-const snapshot = await firebase.database().ref('users').once('value');
+## 📁 File Changes
 
-// New Supabase
-const { data, error } = await supabase
-    .from('users')
+### New Files Created:
+- `supabase-config.js` - Server-side Supabase configuration
+- `supabase-service.js` - Client-side Supabase service (replaces firebase-service.js)
+- `supabase-client.js` - Browser Supabase client configuration
+- `database/supabase-init.js` - Database initialization script
+
+### Files to Update:
+- All HTML files: Replace Firebase SDK with Supabase SDK
+- All JavaScript files: Replace Firebase service calls with Supabase service calls
+- `package.json`: Updated dependencies
+
+### Files to Remove (after migration):
+- `firebase-config.js`
+- `firebase-service.js`
+- `firebase-client.js`
+- `database/firebase-init.js`
+
+## 🔧 Configuration
+
+### Environment Variables
+Create a `.env` file with your Supabase credentials:
+
+```env
+SUPABASE_URL=https://nhmgolhyebehkmvlutir.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+### Database Connection
+The database connection string is:
+```
+postgresql://postgres:aass1122@db.nhmgolhyebehkmvlutir.supabase.co:5432/postgres
+```
+
+## 📊 Database Schema
+
+The migration creates the following tables:
+
+1. **profiles** - User profiles and information
+2. **cars** - Car listings and details
+3. **car_photos** - Car images and photos
+4. **bookings** - Rental bookings and reservations
+5. **notifications** - User notifications
+6. **reviews** - Car reviews and ratings
+7. **payments** - Payment transactions
+
+## 🔐 Authentication
+
+### User Registration
+```javascript
+// Before (Firebase)
+const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+// After (Supabase)
+const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password
+});
+```
+
+### User Login
+```javascript
+// Before (Firebase)
+const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+
+// After (Supabase)
+const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+});
+```
+
+### User Logout
+```javascript
+// Before (Firebase)
+await firebase.auth().signOut();
+
+// After (Supabase)
+await supabase.auth.signOut();
+```
+
+## 🗄️ Database Operations
+
+### Reading Data
+```javascript
+// Before (Firebase)
+const snapshot = await db.ref('cars').once('value');
+const cars = snapshot.val();
+
+// After (Supabase)
+const { data: cars, error } = await supabase
+    .from('cars')
     .select('*');
 ```
 
-### 4. Update Real-time Listeners
+### Writing Data
 ```javascript
-// Old Firebase
-firebase.database().ref('users').on('value', callback);
+// Before (Firebase)
+await db.ref('cars').push(carData);
 
-// New Supabase
+// After (Supabase)
+const { data, error } = await supabase
+    .from('cars')
+    .insert(carData);
+```
+
+### Updating Data
+```javascript
+// Before (Firebase)
+await db.ref(`cars/${carId}`).update(updates);
+
+// After (Supabase)
+const { error } = await supabase
+    .from('cars')
+    .update(updates)
+    .eq('id', carId);
+```
+
+### Deleting Data
+```javascript
+// Before (Firebase)
+await db.ref(`cars/${carId}`).remove();
+
+// After (Supabase)
+const { error } = await supabase
+    .from('cars')
+    .delete()
+    .eq('id', carId);
+```
+
+## 📸 File Storage
+
+### Upload Files
+```javascript
+// Before (Firebase)
+const storageRef = storage.ref().child(fileName);
+const snapshot = await storageRef.put(file);
+const downloadURL = await snapshot.ref.getDownloadURL();
+
+// After (Supabase)
+const { data, error } = await supabase.storage
+    .from('car-photos')
+    .upload(fileName, file);
+
+const { data: urlData } = supabase.storage
+    .from('car-photos')
+    .getPublicUrl(fileName);
+```
+
+## 🔔 Real-time Updates
+
+### Listen to Changes
+```javascript
+// Before (Firebase)
+db.ref('cars').on('value', (snapshot) => {
+    const cars = snapshot.val();
+    callback(cars);
+});
+
+// After (Supabase)
 supabase
-    .channel('users')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, callback)
+    .channel('cars')
+    .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'cars' },
+        (payload) => {
+            // Handle changes
+        }
+    )
     .subscribe();
 ```
 
-## 🔐 Security Features
+## 🚨 Common Issues & Solutions
 
-### Row Level Security (RLS)
-- Users can only access their own data
-- Car owners can only modify their own cars
-- Booking participants can only view their bookings
-- Public read access for car listings
+### 1. Authentication Errors
+- Ensure your Supabase anon key is correct
+- Check that Row Level Security (RLS) policies are properly configured
 
-### Authentication
-- JWT-based authentication
-- Secure session management
-- Password hashing with bcrypt
+### 2. Database Connection Issues
+- Verify the connection string is correct
+- Check that your IP is allowed in Supabase dashboard
 
-## 📈 Performance Optimizations
+### 3. CORS Issues
+- Configure CORS settings in your Supabase dashboard
+- Ensure your domain is in the allowed origins
 
-### Database Indexes
-- Email lookups for users
-- Owner-based car queries
-- Status-based filtering
-- Date range queries for bookings
+### 4. RLS Policy Errors
+- Review and update Row Level Security policies
+- Test policies with different user roles
 
-### Storage Optimization
-- Efficient file uploads
-- Public URL caching
-- Automatic file cleanup
+## 📋 Migration Checklist
 
-## 🧪 Testing
+- [ ] Install Supabase dependencies
+- [ ] Initialize Supabase database
+- [ ] Update HTML files to use Supabase SDK
+- [ ] Replace Firebase service calls with Supabase calls
+- [ ] Test authentication flow
+- [ ] Test CRUD operations
+- [ ] Test file uploads
+- [ ] Test real-time updates
+- [ ] Remove Firebase dependencies
+- [ ] Update environment variables
+- [ ] Test all features thoroughly
 
-### Run Connection Test
-```bash
-npm run test-supabase
-```
+## 🆘 Support
 
-### Test Database Operations
-```bash
-node test-supabase.js
-```
+If you encounter issues during migration:
 
-### Verify Real-time Features
-- Test auth state changes
-- Test database subscriptions
-- Test file uploads
+1. Check the Supabase documentation: https://supabase.com/docs
+2. Review the browser console for error messages
+3. Check the server logs for backend errors
+4. Verify your Supabase project settings
 
-## 🚨 Important Notes
+## 🎯 Benefits of Migration
 
-### 1. Data Migration
-- Export existing Firebase data
-- Transform data to match new schema
-- Import into Supabase tables
+- **Better Performance**: PostgreSQL is more performant than Firebase Realtime Database
+- **SQL Support**: Full SQL capabilities for complex queries
+- **Better Scalability**: PostgreSQL handles large datasets better
+- **Cost Effective**: Often more cost-effective for production applications
+- **Open Source**: PostgreSQL is open source and widely supported
+- **Better Data Integrity**: ACID compliance and constraints
 
-### 2. Environment Variables
-- Update `.env` file with Supabase credentials
-- Remove Firebase environment variables
+## 🔄 Rollback Plan
 
-### 3. Client-side Updates
-- Update HTML files to load Supabase client
-- Replace Firebase SDK with Supabase SDK
-- Update all service calls
+If you need to rollback to Firebase:
 
-### 4. Storage Migration
-- Download files from Firebase Storage
-- Upload to Supabase Storage
-- Update file references in database
+1. Keep your Firebase configuration files
+2. Restore Firebase dependencies in package.json
+3. Replace Supabase service calls with Firebase calls
+4. Test thoroughly before deploying
 
-## 🔍 Troubleshooting
+---
 
-### Common Issues
-
-1. **Connection Failed**
-   - Verify Supabase URL and key
-   - Check network connectivity
-   - Ensure project is active
-
-2. **Authentication Errors**
-   - Verify email/password format
-   - Check user exists in Supabase
-   - Ensure auth is enabled
-
-3. **Permission Denied**
-   - Check RLS policies
-   - Verify user authentication
-   - Review table permissions
-
-4. **Real-time Not Working**
-   - Check subscription setup
-   - Verify channel configuration
-   - Ensure database changes trigger events
-
-### Debug Commands
-```bash
-# Test database connection
-npm run test-supabase
-
-# Check database stats
-node -e "require('./database/supabase-db').getDatabaseStats().then(console.log)"
-
-# Clear all data (for testing)
-node -e "require('./database/supabase-db').clearAllData().then(console.log)"
-```
-
-## 📚 Additional Resources
-
-- [Supabase Documentation](https://supabase.com/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
-- [Real-time Subscriptions](https://supabase.com/docs/guides/realtime)
-
-## 🎉 Migration Complete!
-
-After following this guide, your car rental platform will be fully migrated from Firebase to Supabase with:
-
-- ✅ PostgreSQL database with full SQL capabilities
-- ✅ Real-time subscriptions
-- ✅ Row Level Security
-- ✅ File storage
-- ✅ Authentication
-- ✅ Better performance and scalability
-
-For support or questions, refer to the Supabase documentation or community forums.
+**Note**: This migration maintains the same API structure, so your existing UI code should work with minimal changes. The main changes are in the service layer and database operations.

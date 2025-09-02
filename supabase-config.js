@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration
 const supabaseUrl = 'https://nhmgolhyebehkmvlutir.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5obWdvbGh5ZWJlaGttdmx1dGlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzI5NzQsImV4cCI6MjA1MDU0ODk3NH0.YOUR_ANON_KEY'; // You'll need to replace this with your actual anon key
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'your-anon-key-here';
 
 // Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);
