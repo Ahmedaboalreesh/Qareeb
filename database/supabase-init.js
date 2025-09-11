@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 
 // Database connection configuration
-const connectionString = 'postgresql://postgres:aass1122@db.nhmgolhyebehkmvlutir.supabase.co:5432/postgres';
+const connectionString = 'postgresql://postgres:Ahmed@2006@db.nhmgolhyebehkmvlutir.supabase.co:5432/postgres';
 
 // Create PostgreSQL client
 const client = new Client({

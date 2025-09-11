@@ -49,3 +49,4 @@ Migrated the Qareeb project from a basic web application to a comprehensive car 
 - Added server configuration files
 
 This migration transforms Qareeb from a basic web page into a full-featured car rental platform ready for production deployment.
+

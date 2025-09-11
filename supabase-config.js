@@ -8,7 +8,7 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY || 'your-anon-key-here';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Database connection string for direct PostgreSQL access
-const dbConnectionString = 'postgresql://postgres:aass1122@db.nhmgolhyebehkmvlutir.supabase.co:5432/postgres';
+const dbConnectionString = 'postgresql://postgres:Ahmed@2006@db.nhmgolhyebehkmvlutir.supabase.co:5432/postgres';
 
 module.exports = {
   supabase,
