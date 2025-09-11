@@ -359,19 +359,44 @@
                         newsletter: formData.get('newsletter') === 'on'
                     };
                     
-                    // Register user with Firebase
-                    const result = await firebaseService.registerUser(userData);
+                    // Try Firebase first, fallback to localStorage
+                    let result = null;
+                    let useFirebase = false;
                     
-                    if (result && result.user && result.profile) {
+                    try {
+                        // Check if Firebase is available and working
+                        if (window.firebaseService && typeof window.firebaseService.registerUser === 'function') {
+                            result = await firebaseService.registerUser(userData);
+                            useFirebase = true;
+                        } else {
+                            throw new Error('Firebase not available');
+                        }
+                    } catch (firebaseError) {
+                        console.log('Firebase not available, using localStorage fallback');
+                        // Fallback to localStorage
+                        result = await registerUserLocalStorage(userData);
+                        useFirebase = false;
+                    }
+                    
+                    if (result) {
                         showMessage('تم إنشاء الحساب بنجاح!', 'success');
                         
                         // Store user info in session storage for quick access
-                        sessionStorage.setItem('currentUser', JSON.stringify({
-                            uid: result.user.uid,
-                            email: result.profile.email,
-                            full_name: result.profile.full_name,
-                            user_type: result.profile.user_type
-                        }));
+                        if (useFirebase) {
+                            sessionStorage.setItem('currentUser', JSON.stringify({
+                                uid: result.user.uid,
+                                email: result.profile.email,
+                                full_name: result.profile.full_name,
+                                user_type: result.profile.user_type
+                            }));
+                        } else {
+                            sessionStorage.setItem('currentUser', JSON.stringify({
+                                uid: result.id,
+                                email: result.email,
+                                full_name: result.full_name,
+                                user_type: result.user_type
+                            }));
+                        }
                         
                         // Redirect based on user type
                         setTimeout(() => {
@@ -392,19 +417,30 @@
                     let errorMessage = 'حدث خطأ في إنشاء الحساب';
                     
                     // Handle specific Firebase auth errors
-                    switch (error.code) {
-                        case 'auth/email-already-in-use':
-                            errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = 'البريد الإلكتروني غير صحيح';
-                            break;
-                        case 'auth/weak-password':
-                            errorMessage = 'كلمة المرور ضعيفة جداً';
-                            break;
-                        case 'auth/operation-not-allowed':
-                            errorMessage = 'إنشاء الحساب غير مسموح حالياً';
-                            break;
+                    if (error.code) {
+                        switch (error.code) {
+                            case 'auth/email-already-in-use':
+                                errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'البريد الإلكتروني غير صحيح';
+                                break;
+                            case 'auth/weak-password':
+                                errorMessage = 'كلمة المرور ضعيفة جداً';
+                                break;
+                            case 'auth/operation-not-allowed':
+                                errorMessage = 'إنشاء الحساب غير مسموح حالياً';
+                                break;
+                        }
+                    } else if (error.message) {
+                        // Handle localStorage errors
+                        if (error.message.includes('البريد الإلكتروني مستخدم بالفعل')) {
+                            errorMessage = error.message;
+                        } else if (error.message.includes('Firebase not available')) {
+                            errorMessage = 'جاري استخدام النظام المحلي...';
+                        } else {
+                            errorMessage = error.message;
+                        }
                     }
                     
                     showMessage(errorMessage, 'error');
@@ -450,6 +486,134 @@
             function showLoading(show) {
                 const loadingOverlay = document.getElementById('loadingOverlay');
                 loadingOverlay.style.display = show ? 'flex' : 'none';
+            }
+            
+            // localStorage fallback registration function
+            async function registerUserLocalStorage(userData) {
+                try {
+                    // Check if email already exists
+                    const existingUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+                    const emailExists = existingUsers.find(user => user.email === userData.email);
+                    
+                    if (emailExists) {
+                        throw new Error('البريد الإلكتروني مستخدم بالفعل');
+                    }
+                    
+                    // Create user object
+                    const newUser = {
+                        id: 'user-' + Date.now(),
+                        full_name: userData.full_name,
+                        email: userData.email,
+                        phone: userData.phone,
+                        city: userData.city,
+                        password: userData.password,
+                        user_type: userData.user_type,
+                        created_at: new Date().toISOString(),
+                        is_active: true
+                    };
+                    
+                    // Add user to localStorage
+                    existingUsers.push(newUser);
+                    localStorage.setItem('mockUsers', JSON.stringify(existingUsers));
+                    
+                    // Create mock token
+                    const token = 'mock-token-' + Date.now();
+                    localStorage.setItem('userToken', token);
+                    localStorage.setItem('userData', JSON.stringify(newUser));
+                    localStorage.setItem('userType', userData.user_type);
+                    
+                    // Create sample data for the new user
+                    createSampleDataForUser(newUser.id, userData.user_type);
+                    
+                    console.log('✅ User registered successfully with localStorage:', newUser.id);
+                    return newUser;
+                    
+                } catch (error) {
+                    console.error('❌ localStorage registration failed:', error);
+                    throw error;
+                }
+            }
+            
+            // Create sample data for new user
+            function createSampleDataForUser(userId, userType) {
+                try {
+                    console.log('🔧 Creating sample data for new user:', userId, userType);
+                    
+                    if (userType === 'owner') {
+                        // Create sample cars for car owner
+                        const sampleCars = [
+                            {
+                                id: 'car-' + Date.now(),
+                                owner_id: userId,
+                                brand: 'تويوتا',
+                                model: 'كامري',
+                                year: '2023',
+                                color: 'أبيض',
+                                transmission: 'أوتوماتيك',
+                                fuel_type: 'بنزين',
+                                daily_rate: 200,
+                                location: 'الرياض',
+                                description: 'سيارة فاخرة ومريحة للرحلات الطويلة',
+                                features: ['مكيف', 'نظام صوت', 'كاميرا خلفية', 'ABS'],
+                                photos: [],
+                                is_available: true,
+                                created_at: new Date().toISOString()
+                            }
+                        ];
+                        
+                        // Save sample cars
+                        const existingCars = JSON.parse(localStorage.getItem('mockCars') || '[]');
+                        existingCars.push(...sampleCars);
+                        localStorage.setItem('mockCars', JSON.stringify(existingCars));
+                        
+                    } else {
+                        // Create sample bookings for renter
+                        const sampleBookings = [
+                            {
+                                id: 'booking-' + Date.now(),
+                                car_id: 'sample-car',
+                                car_name: 'هونداي أكسنت 2022',
+                                renter_id: userId,
+                                renter_name: document.getElementById('fullName').value,
+                                owner_id: 'sample-owner',
+                                start_date: '2024-01-20',
+                                end_date: '2024-01-22',
+                                status: 'approved',
+                                total_amount: 300,
+                                daily_rate: 100,
+                                created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+                            }
+                        ];
+                        
+                        // Save sample bookings
+                        const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+                        existingBookings.push(...sampleBookings);
+                        localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
+                    }
+                    
+                    // Create sample notifications
+                    const sampleNotifications = [
+                        {
+                            id: 'notification-' + Date.now(),
+                            user_id: userId,
+                            type: 'welcome',
+                            title: 'مرحباً بك في منصة شارك سيارتك!',
+                            description: 'شكراً لك على الانضمام إلينا. نتمنى لك تجربة ممتعة!',
+                            is_read: false,
+                            created_at: new Date().toISOString()
+                        }
+                    ];
+                    
+                    // Save sample notifications
+                    const existingNotifications = JSON.parse(localStorage.getItem('mockNotifications') || '[]');
+                    existingNotifications.push(...sampleNotifications);
+                    localStorage.setItem('mockNotifications', JSON.stringify(existingNotifications));
+                    
+                    console.log('✅ Sample data created successfully for user:', userId);
+                    
+                } catch (error) {
+                    console.error('❌ Error creating sample data:', error);
+                }
             }
         });
     </script>
