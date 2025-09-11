@@ -1,421 +1,463 @@
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
+// Main page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize money counter
+    initializeMoneyCounter();
+    
+    // Initialize smooth scrolling
+    initializeSmoothScrolling();
+    
+    // Initialize cars section functionality
+    initializeCarsSection();
 });
 
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-    hamburger.classList.remove('active');
-    navMenu.classList.remove('active');
-}));
 
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
+
+// Initialize money counter
+function initializeMoneyCounter() {
+    const daySlider = document.getElementById('daySlider');
+    const sliderFill = document.getElementById('sliderFill');
+    const sliderThumb = document.getElementById('sliderThumb');
+    const currentDay = document.getElementById('currentDay');
+    const monthlyAmount = document.getElementById('monthlyAmount');
+    const totalDays = document.getElementById('totalDays');
+    const totalEarnings = document.getElementById('totalEarnings');
+    const monthlyProjection = document.getElementById('monthlyProjection');
+    
+    const dailyRate = 150; // ريال يومياً
+    
+    function updateCounter() {
+        const days = parseInt(daySlider.value);
+        const earnings = days * dailyRate;
+        const monthlyProjectionValue = earnings * 30 / days; // تقدير شهري
+        
+        // Update display
+        currentDay.textContent = `اليوم ${days}`;
+        monthlyAmount.textContent = earnings.toLocaleString();
+        totalDays.textContent = days;
+        totalEarnings.textContent = earnings.toLocaleString();
+        monthlyProjection.textContent = Math.round(monthlyProjectionValue).toLocaleString();
+        
+        // Update slider fill
+        const percentage = (days - 1) / 29 * 100; // 29 is max - min
+        sliderFill.style.width = `${percentage}%`;
+        
+        // Update thumb position
+        sliderThumb.style.left = `${percentage}%`;
+    }
+    
+    // Initial update
+    updateCounter();
+    
+    // Slider change handler
+    daySlider.addEventListener('input', updateCounter);
+    
+    // Add smooth animation
+    daySlider.addEventListener('mousedown', function() {
+        sliderThumb.style.transition = 'none';
     });
-});
-
-// Header scroll effect
-window.addEventListener('scroll', () => {
-    const header = document.querySelector('.header');
-    if (window.scrollY > 100) {
-        header.style.background = 'rgba(255, 255, 255, 0.95)';
-        header.style.backdropFilter = 'blur(10px)';
-    } else {
-        header.style.background = '#fff';
-        header.style.backdropFilter = 'none';
-    }
-});
-
-// Search functionality
-const searchBtn = document.querySelector('.search-btn');
-const searchFields = document.querySelectorAll('.search-field input');
-
-searchBtn.addEventListener('click', () => {
-    const location = searchFields[0].value;
-    const startDate = searchFields[1].value;
-    const endDate = searchFields[2].value;
-
-    if (!location) {
-        alert('الرجاء إدخال الموقع');
-        searchFields[0].focus();
-        return;
-    }
-
-    if (!startDate) {
-        alert('الرجاء اختيار تاريخ البداية');
-        searchFields[1].focus();
-        return;
-    }
-
-    if (!endDate) {
-        alert('الرجاء اختيار تاريخ النهاية');
-        searchFields[2].focus();
-        return;
-    }
-
-    if (new Date(startDate) >= new Date(endDate)) {
-        alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
-        searchFields[2].focus();
-        return;
-    }
-
-    // Simulate search (in real app, this would make an API call)
-    showSearchResults(location, startDate, endDate);
-});
-
-// Show search results
-function showSearchResults(location, startDate, endDate) {
-    const modal = createModal(`
-        <h2>نتائج البحث</h2>
-        <p>البحث في: ${location}</p>
-        <p>من: ${formatDate(startDate)} إلى: ${formatDate(endDate)}</p>
-        <p>تم العثور على 12 سيارة متاحة</p>
-        <div style="margin-top: 20px;">
-            <button class="btn-primary" onclick="closeModal()">عرض النتائج</button>
-        </div>
-    `);
-    document.body.appendChild(modal);
+    
+    daySlider.addEventListener('mouseup', function() {
+        sliderThumb.style.transition = 'left 0.3s ease';
+    });
 }
 
-// Format date to Arabic
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ar-SA');
+// Initialize smooth scrolling
+function initializeSmoothScrolling() {
+    const navLinks = document.querySelectorAll('.nav-menu a[href^="#"]');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            
+            if (targetSection) {
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
 }
 
-// Create modal
-function createModal(content) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            ${content}
+// Show message function
+function showMessage(message, type = 'info') {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
     `;
     
-    // Add modal styles
+    // Add styles
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        max-width: 400px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    // Add CSS for message content
+    const messageContent = messageDiv.querySelector('.message-content');
+    messageContent.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    `;
+    
+    // Add styles for close button
+    const closeBtn = messageDiv.querySelector('button');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        margin-right: 0;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    // Add to page
+    document.body.appendChild(messageDiv);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (messageDiv.parentElement) {
+            messageDiv.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => {
+                if (messageDiv.parentElement) {
+                    messageDiv.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+    
+    // Add CSS animations
     const style = document.createElement('style');
     style.textContent = `
-        .modal {
-            display: block;
-            position: fixed;
-            z-index: 2000;
-            right: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            position: relative;
-            text-align: center;
-            animation: slideIn 0.3s;
-        }
-        .close {
-            position: absolute;
-            left: 15px;
-            top: 15px;
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
-        }
-        @keyframes fadeIn {
-            from {opacity: 0;}
-            to {opacity: 1;}
-        }
         @keyframes slideIn {
-            from {transform: translateY(-50px); opacity: 0;}
-            to {transform: translateY(0); opacity: 1;}
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
     `;
     document.head.appendChild(style);
+}
+
+// Add hover effects to category cards
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryCards = document.querySelectorAll('.category-card');
     
-    return modal;
-}
-
-// Close modal
-function closeModal() {
-    const modal = document.querySelector('.modal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-// Car booking functionality
-document.querySelectorAll('.btn-book').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const carCard = this.closest('.car-card');
-        const carName = carCard.querySelector('h3').textContent;
-        const carPrice = carCard.querySelector('.car-price').textContent;
+    categoryCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+            this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+        });
         
-        const modal = createModal(`
-            <h2>حجز السيارة</h2>
-            <h3>${carName}</h3>
-            <p>السعر: ${carPrice}</p>
-            <div style="margin: 20px 0;">
-                <input type="date" id="booking-start" style="margin: 5px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <input type="date" id="booking-end" style="margin: 5px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin-top: 20px;">
-                <button class="btn-primary" onclick="confirmBooking('${carName}')">تأكيد الحجز</button>
-                <button class="btn-secondary" onclick="closeModal()" style="margin-right: 10px;">إلغاء</button>
-            </div>
-        `);
-        document.body.appendChild(modal);
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+        });
     });
 });
 
-// Confirm booking
-function confirmBooking(carName) {
-    const startDate = document.getElementById('booking-start').value;
-    const endDate = document.getElementById('booking-end').value;
+// Add click handlers for category cards
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryCards = document.querySelectorAll('.category-card');
     
-    if (!startDate || !endDate) {
-        alert('الرجاء اختيار تواريخ الحجز');
-        return;
-    }
-    
-    if (new Date(startDate) >= new Date(endDate)) {
-        alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
-        return;
-    }
-    
-    closeModal();
-    
-    const successModal = createModal(`
-        <div style="color: #28a745;">
-            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 20px;"></i>
-            <h2>تم الحجز بنجاح!</h2>
-            <p>تم حجز ${carName}</p>
-            <p>من ${formatDate(startDate)} إلى ${formatDate(endDate)}</p>
-            <p>سيتم التواصل معك قريباً</p>
-            <button class="btn-primary" onclick="closeModal()" style="margin-top: 20px;">حسناً</button>
-        </div>
-    `);
-    document.body.appendChild(successModal);
-}
-
-// Hero buttons functionality
-document.querySelector('.btn-primary').addEventListener('click', () => {
-    document.querySelector('#cars').scrollIntoView({
-        behavior: 'smooth'
+    categoryCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Store category preference
+            const categoryName = this.querySelector('h4').textContent;
+            localStorage.setItem('selectedCategory', categoryName);
+            
+            // Redirect to browse cars
+            window.location.href = 'browse-cars.html';
+        });
     });
 });
 
-document.querySelector('.btn-secondary').addEventListener('click', () => {
-    const modal = createModal(`
-        <h2>أجّر سيارتك</h2>
-        <p>اربح دخل إضافي من سيارتك</p>
-        <form style="text-align: right; margin: 20px 0;">
-            <div style="margin: 15px 0;">
-                <label>نوع السيارة:</label>
-                <input type="text" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>سنة الصنع:</label>
-                <input type="number" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>السعر المطلوب (يومياً):</label>
-                <input type="number" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>رقم الهاتف:</label>
-                <input type="tel" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-        </form>
-        <div style="margin-top: 20px;">
-            <button class="btn-primary" onclick="submitCarRental()">إرسال الطلب</button>
-            <button class="btn-secondary" onclick="closeModal()" style="margin-right: 10px;">إلغاء</button>
-        </div>
-    `);
-    document.body.appendChild(modal);
+// Add navbar scroll effect
+window.addEventListener('scroll', function() {
+    const navbar = document.querySelector('.navbar');
+    
+    if (window.scrollY > 100) {
+        navbar.classList.add('scrolled');
+    } else {
+        navbar.classList.remove('scrolled');
+    }
 });
 
-// Submit car rental
-function submitCarRental() {
-    closeModal();
-    const successModal = createModal(`
-        <div style="color: #28a745;">
-            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 20px;"></i>
-            <h2>تم إرسال الطلب بنجاح!</h2>
-            <p>سيتم مراجعة طلبك والتواصل معك خلال 24 ساعة</p>
-            <button class="btn-primary" onclick="closeModal()" style="margin-top: 20px;">حسناً</button>
-        </div>
-    `);
-    document.body.appendChild(successModal);
+// Add CSS for navbar scroll effect and search suggestions
+const navbarStyle = document.createElement('style');
+navbarStyle.textContent = `
+    .navbar.scrolled {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-box {
+        transition: all 0.3s ease;
+    }
+    
+    .search-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .search-input input {
+        transition: border-color 0.3s ease;
+    }
+    
+    .search-input input:focus {
+        border-color: #3b82f6;
+        outline: none;
+    }
+    
+    .search-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+    
+    .search-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .search-suggestions {
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .suggestion-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-left: 10px;
+    }
+    
+    .suggestion-btn {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin: 0 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .suggestion-btn:hover {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+        transform: translateY(-1px);
+    }
+    
+    .hero-search {
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(navbarStyle);
+
+// Initialize cars section functionality
+function initializeCarsSection() {
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    const carTypeFilter = document.getElementById('carTypeFilter');
+    const cityFilter = document.getElementById('cityFilter');
+    const priceFilter = document.getElementById('priceFilter');
+    
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', function() {
+            applyCarFilters();
+        });
+    }
+    
+    // Add event listeners for filter changes
+    if (carTypeFilter) {
+        carTypeFilter.addEventListener('change', function() {
+            applyCarFilters();
+        });
+    }
+    
+    if (cityFilter) {
+        cityFilter.addEventListener('change', function() {
+            applyCarFilters();
+        });
+    }
+    
+    if (priceFilter) {
+        priceFilter.addEventListener('change', function() {
+            applyCarFilters();
+        });
+    }
 }
 
-// Auth buttons functionality
-document.querySelector('.btn-login').addEventListener('click', () => {
-    const modal = createModal(`
-        <h2>تسجيل الدخول</h2>
-        <form style="text-align: right; margin: 20px 0;">
-            <div style="margin: 15px 0;">
-                <label>البريد الإلكتروني:</label>
-                <input type="email" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>كلمة المرور:</label>
-                <input type="password" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-        </form>
-        <div style="margin-top: 20px;">
-            <button class="btn-primary" onclick="handleLogin()">دخول</button>
-            <button class="btn-secondary" onclick="closeModal()" style="margin-right: 10px;">إلغاء</button>
-        </div>
-        <p style="margin-top: 15px;">
-            <a href="#" onclick="showRegister()" style="color: #2c5aa0;">ليس لديك حساب؟ أنشئ حساباً جديداً</a>
-        </p>
-    `);
-    document.body.appendChild(modal);
-});
-
-document.querySelector('.btn-register').addEventListener('click', () => {
-    showRegister();
-});
-
-function showRegister() {
-    closeModal();
-    const modal = createModal(`
-        <h2>إنشاء حساب جديد</h2>
-        <form style="text-align: right; margin: 20px 0;">
-            <div style="margin: 15px 0;">
-                <label>الاسم الكامل:</label>
-                <input type="text" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>البريد الإلكتروني:</label>
-                <input type="email" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>رقم الهاتف:</label>
-                <input type="tel" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-            <div style="margin: 15px 0;">
-                <label>كلمة المرور:</label>
-                <input type="password" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
-            </div>
-        </form>
-        <div style="margin-top: 20px;">
-            <button class="btn-primary" onclick="handleRegister()">إنشاء الحساب</button>
-            <button class="btn-secondary" onclick="closeModal()" style="margin-right: 10px;">إلغاء</button>
-        </div>
-        <p style="margin-top: 15px;">
-            <a href="#" onclick="document.querySelector('.btn-login').click()" style="color: #2c5aa0;">لديك حساب بالفعل؟ سجل دخولك</a>
-        </p>
-    `);
-    document.body.appendChild(modal);
-}
-
-function handleLogin() {
-    closeModal();
-    const successModal = createModal(`
-        <div style="color: #28a745;">
-            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 20px;"></i>
-            <h2>أهلاً بك!</h2>
-            <p>تم تسجيل الدخول بنجاح</p>
-            <button class="btn-primary" onclick="closeModal()" style="margin-top: 20px;">متابعة</button>
-        </div>
-    `);
-    document.body.appendChild(successModal);
-}
-
-function handleRegister() {
-    closeModal();
-    const successModal = createModal(`
-        <div style="color: #28a745;">
-            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 20px;"></i>
-            <h2>مرحباً بك في كار شير!</h2>
-            <p>تم إنشاء حسابك بنجاح</p>
-            <p>تحقق من بريدك الإلكتروني لتفعيل الحساب</p>
-            <button class="btn-primary" onclick="closeModal()" style="margin-top: 20px;">حسناً</button>
-        </div>
-    `);
-    document.body.appendChild(successModal);
-}
-
-// Intersection Observer for animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
+// Apply car filters
+function applyCarFilters() {
+    const carTypeFilter = document.getElementById('carTypeFilter');
+    const cityFilter = document.getElementById('cityFilter');
+    const priceFilter = document.getElementById('priceFilter');
+    const carsGrid = document.getElementById('carsGrid');
+    
+    if (!carsGrid) return;
+    
+    const selectedType = carTypeFilter ? carTypeFilter.value : '';
+    const selectedCity = cityFilter ? cityFilter.value : '';
+    const selectedPrice = priceFilter ? priceFilter.value : '';
+    
+    const carCards = carsGrid.querySelectorAll('.car-card');
+    
+    carCards.forEach(card => {
+        let showCard = true;
+        
+        // Filter by car type
+        if (selectedType) {
+            const carBadge = card.querySelector('.car-badge');
+            if (carBadge) {
+                const carType = carBadge.classList.contains(selectedType);
+                if (!carType) {
+                    showCard = false;
+                }
+            }
+        }
+        
+        // Filter by city
+        if (selectedCity && showCard) {
+            const citySpan = card.querySelector('.car-details span:first-child');
+            if (citySpan) {
+                const cityText = citySpan.textContent;
+                if (!cityText.includes(selectedCity)) {
+                    showCard = false;
+                }
+            }
+        }
+        
+        // Filter by price
+        if (selectedPrice && showCard) {
+            const priceSpan = card.querySelector('.price');
+            if (priceSpan) {
+                const price = parseInt(priceSpan.textContent);
+                const [minPrice, maxPrice] = selectedPrice.split('-').map(p => {
+                    if (p.includes('+')) {
+                        return Infinity;
+                    }
+                    return parseInt(p);
+                });
+                
+                if (price < minPrice || (maxPrice !== Infinity && price > maxPrice)) {
+                    showCard = false;
+                }
+            }
+        }
+        
+        // Show/hide card
+        if (showCard) {
+            card.style.display = 'block';
+            card.style.animation = 'fadeIn 0.5s ease-in-out';
+        } else {
+            card.style.display = 'none';
         }
     });
-}, observerOptions);
-
-// Observe elements for animation
-document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('.feature-card, .car-card, .testimonial-card, .step');
-    animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
-    });
-});
-
-// Set minimum date for date inputs
-document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelectorAll('input[type="date"]').forEach(input => {
-        input.min = today;
-    });
-});
-
-// Close modal when clicking outside
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-        closeModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeModal();
-    }
-});
-
-// Loading animation for buttons
-function addLoadingToButton(button, text = 'جاري التحميل...') {
-    const originalText = button.textContent;
-    button.textContent = text;
-    button.disabled = true;
     
-    setTimeout(() => {
-        button.textContent = originalText;
-        button.disabled = false;
-    }, 2000);
+    // Show message if no cars found
+    const visibleCards = Array.from(carCards).filter(card => card.style.display !== 'none');
+    if (visibleCards.length === 0) {
+        showMessage('لا توجد سيارات تطابق الفلاتر المحددة', 'info');
+    }
 }
+
+// Expand search function
+window.expandSearch = function() {
+    const searchBox = document.querySelector('.hero-search');
+    if (searchBox) {
+        searchBox.scrollIntoView({ behavior: 'smooth' });
+        const locationInput = document.getElementById('searchLocation');
+        if (locationInput) {
+            locationInput.focus();
+        }
+    }
+};
+
+// Add CSS for car filters animation
+const carFiltersStyle = document.createElement('style');
+carFiltersStyle.textContent = `
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .car-card {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .cars-filters {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    .cars-grid {
+        animation: fadeIn 1s ease-in-out;
+    }
+`;
+document.head.appendChild(carFiltersStyle);

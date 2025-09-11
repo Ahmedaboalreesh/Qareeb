@@ -1,0 +1,37 @@
+# Git Commit Commands for Qareeb Platform Migration
+
+## Option 1: Using GitHub Desktop (Recommended if Git CLI not available)
+1. Open GitHub Desktop
+2. Select your Qareeb repository
+3. Review all the changes in the "Changes" tab
+4. Add commit message: "feat: Complete platform migration to car rental application"
+5. Add description: "Migrated from basic Qareeb to full car rental platform with 233 new files including authentication, booking system, payment processing, and comprehensive features. Original files backed up in backup_old_files/."
+6. Click "Commit to main"
+7. Click "Push origin" to upload to GitHub
+
+## Option 2: Using Git CLI (if available)
+```bash
+git add .
+git commit -m "feat: Complete platform migration to car rental application
+
+- Migrated from basic Qareeb to full car rental platform
+- Added 233 new files with complete functionality
+- Features: authentication, booking, payments, notifications
+- Original files backed up in backup_old_files/
+- Ready for production deployment"
+git push origin main
+```
+
+## Option 3: Using VS Code Git Integration
+1. Open VS Code in the Qareeb directory
+2. Go to Source Control panel (Ctrl+Shift+G)
+3. Stage all changes (+ button)
+4. Enter commit message: "feat: Complete platform migration to car rental application"
+5. Click Commit button
+6. Click Sync Changes to push to GitHub
+
+## Commit Message Summary
+**Title**: feat: Complete platform migration to car rental application
+
+**Description**: 
+Migrated from basic Qareeb to full car rental platform with 233 new files including authentication, booking system, payment processing, notifications, and comprehensive features. Original files safely backed up in backup_old_files/ directory. Platform now ready for production deployment.
