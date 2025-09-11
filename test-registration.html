@@ -100,11 +100,11 @@
                 return;
             }
             
-            // Check if Firebase is available
-            if (typeof firebase !== 'undefined') {
-                status.innerHTML += '✅ Firebase متاح<br>';
+            // Check if Supabase is available
+            if (typeof supabase !== 'undefined') {
+                status.innerHTML += '✅ Supabase متاح<br>';
             } else {
-                status.innerHTML += '⚠️ Firebase غير متاح (سيتم استخدام localStorage)<br>';
+                status.innerHTML += '⚠️ Supabase غير متاح (سيتم استخدام localStorage)<br>';
             }
             
             // Check existing data

@@ -186,14 +186,11 @@
         </div>
     </footer>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Firebase Service -->
-    <script src="firebase-service.js"></script>
+    <!-- Supabase Service -->
+    <script src="supabase-service.js"></script>
     
     <script>
         // Registration page functionality - Updated to use Firebase
@@ -359,32 +356,32 @@
                         newsletter: formData.get('newsletter') === 'on'
                     };
                     
-                    // Try Firebase first, fallback to localStorage
+                    // Try Supabase first, fallback to localStorage
                     let result = null;
-                    let useFirebase = false;
+                    let useSupabase = false;
                     
                     try {
-                        // Check if Firebase is available and working
-                        if (window.firebaseService && typeof window.firebaseService.registerUser === 'function') {
-                            result = await firebaseService.registerUser(userData);
-                            useFirebase = true;
+                        // Check if Supabase is available and working
+                        if (window.supabaseService && typeof window.supabaseService.registerUser === 'function') {
+                            result = await supabaseService.registerUser(userData);
+                            useSupabase = true;
                         } else {
-                            throw new Error('Firebase not available');
+                            throw new Error('Supabase not available');
                         }
-                    } catch (firebaseError) {
-                        console.log('Firebase not available, using localStorage fallback');
+                    } catch (supabaseError) {
+                        console.log('Supabase not available, using localStorage fallback');
                         // Fallback to localStorage
                         result = await registerUserLocalStorage(userData);
-                        useFirebase = false;
+                        useSupabase = false;
                     }
                     
                     if (result) {
                         showMessage('تم إنشاء الحساب بنجاح!', 'success');
                         
                         // Store user info in session storage for quick access
-                        if (useFirebase) {
+                        if (useSupabase) {
                             sessionStorage.setItem('currentUser', JSON.stringify({
-                                uid: result.user.uid,
+                                uid: result.user.id,
                                 email: result.profile.email,
                                 full_name: result.profile.full_name,
                                 user_type: result.profile.user_type
@@ -416,27 +413,19 @@
                     
                     let errorMessage = 'حدث خطأ في إنشاء الحساب';
                     
-                    // Handle specific Firebase auth errors
-                    if (error.code) {
-                        switch (error.code) {
-                            case 'auth/email-already-in-use':
-                                errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
-                                break;
-                            case 'auth/invalid-email':
-                                errorMessage = 'البريد الإلكتروني غير صحيح';
-                                break;
-                            case 'auth/weak-password':
-                                errorMessage = 'كلمة المرور ضعيفة جداً';
-                                break;
-                            case 'auth/operation-not-allowed':
-                                errorMessage = 'إنشاء الحساب غير مسموح حالياً';
-                                break;
-                        }
-                    } else if (error.message) {
-                        // Handle localStorage errors
-                        if (error.message.includes('البريد الإلكتروني مستخدم بالفعل')) {
+                    // Handle specific Supabase auth errors
+                    if (error.message) {
+                        if (error.message.includes('User already registered')) {
+                            errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+                        } else if (error.message.includes('Invalid email')) {
+                            errorMessage = 'البريد الإلكتروني غير صحيح';
+                        } else if (error.message.includes('Password should be at least')) {
+                            errorMessage = 'كلمة المرور ضعيفة جداً';
+                        } else if (error.message.includes('Signup is disabled')) {
+                            errorMessage = 'إنشاء الحساب غير مسموح حالياً';
+                        } else if (error.message.includes('البريد الإلكتروني مستخدم بالفعل')) {
                             errorMessage = error.message;
-                        } else if (error.message.includes('Firebase not available')) {
+                        } else if (error.message.includes('Supabase not available')) {
                             errorMessage = 'جاري استخدام النظام المحلي...';
                         } else {
                             errorMessage = error.message;

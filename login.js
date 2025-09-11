@@ -44,9 +44,29 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
 
         try {
-            // For now, we'll use a simple authentication approach
-            // In a real application, this would call your backend API
-            const userData = await authenticateUser(email, password, selectedUserType);
+            // Try Supabase authentication first, fallback to localStorage
+            let userData = null;
+            
+            try {
+                // Check if Supabase is available and working
+                if (window.supabaseService && typeof window.supabaseService.loginUser === 'function') {
+                    const result = await supabaseService.loginUser(email, password);
+                    userData = {
+                        id: result.user.id,
+                        email: result.profile.email,
+                        full_name: result.profile.full_name,
+                        user_type: result.profile.user_type,
+                        phone: result.profile.phone,
+                        city: result.profile.city
+                    };
+                } else {
+                    throw new Error('Supabase not available');
+                }
+            } catch (supabaseError) {
+                console.log('Supabase not available, using localStorage fallback');
+                // Fallback to localStorage authentication
+                userData = await authenticateUser(email, password, selectedUserType);
+            }
             
             if (userData) {
                 // Store user data and token

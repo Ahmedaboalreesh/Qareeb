@@ -1,5 +1,5 @@
-// Supabase Service - Main Database Service for Car Rental Platform
-// This service replaces Firebase and handles all data operations
+// Supabase Service - Complete Database Service for Car Rental Platform
+// This service replaces Firebase and handles all data operations with Supabase
 
 class SupabaseService {
     constructor() {
@@ -16,35 +16,24 @@ class SupabaseService {
                 throw new Error('Supabase SDK not loaded');
             }
 
-            // Initialize Supabase if not already initialized
-            if (!window.supabase) {
-                const supabaseConfig = {
-                    supabaseUrl: 'https://nhmgolhyebehkmvlutir.supabase.co',
-                    supabaseKey: 'your-anon-key-here' // This should be set in your HTML
-                };
-                
-                // Create Supabase client
-                this.supabase = supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseKey);
-            } else {
-                this.supabase = window.supabase;
-            }
+            // Initialize Supabase client
+            this.supabase = supabase.createClient(
+                'https://nhmgolhyebehkmvlutir.supabase.co',
+                'your-anon-key-here' // Replace with your actual anon key
+            );
 
             console.log('🔵 Supabase Service initialized successfully');
             
             // Set up auth state listener
             this.supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN') {
-                    this.currentUser = session?.user;
-                    console.log('Auth state changed: User logged in');
-                } else if (event === 'SIGNED_OUT') {
-                    this.currentUser = null;
-                    console.log('Auth state changed: User logged out');
-                }
+                this.currentUser = session?.user || null;
+                console.log('Auth state changed:', event, this.currentUser ? 'User logged in' : 'User logged out');
             });
 
         } catch (error) {
             console.error('❌ Supabase initialization failed:', error);
-            throw error;
+            // Fallback to localStorage if Supabase fails
+            console.log('🔄 Falling back to localStorage');
         }
     }
 
@@ -53,35 +42,64 @@ class SupabaseService {
     // Register new user
     async registerUser(userData) {
         try {
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
             // Create Supabase Auth user
             const { data: authData, error: authError } = await this.supabase.auth.signUp({
                 email: userData.email,
-                password: userData.password
+                password: userData.password,
+                options: {
+                    data: {
+                        full_name: userData.full_name,
+                        phone: userData.phone,
+                        city: userData.city,
+                        user_type: userData.user_type
+                    }
+                }
             });
 
-            if (authError) throw authError;
+            if (authError) {
+                throw authError;
+            }
 
             const user = authData.user;
 
             // Store additional user data in profiles table
-            const { error: profileError } = await this.supabase
+            const { data: profileData, error: profileError } = await this.supabase
                 .from('profiles')
-                .insert({
+                .insert([
+                    {
+                        id: user.id,
+                        email: userData.email,
+                        full_name: userData.full_name,
+                        phone: userData.phone,
+                        city: userData.city,
+                        user_type: userData.user_type,
+                        is_active: true
+                    }
+                ])
+                .select()
+                .single();
+
+            if (profileError) {
+                console.error('Profile creation error:', profileError);
+                // Don't throw error, user is still created in auth
+            }
+
+            console.log('✅ User registered successfully:', user.id);
+            return { 
+                user, 
+                profile: profileData || {
                     id: user.id,
                     email: userData.email,
                     full_name: userData.full_name,
                     phone: userData.phone,
                     city: userData.city,
-                    user_type: userData.user_type, // 'renter' or 'owner'
-                    created_at: new Date().toISOString(),
-                    is_active: true,
-                    profile_photo: userData.profile_photo || null
-                });
-
-            if (profileError) throw profileError;
-
-            console.log('✅ User registered successfully:', user.id);
-            return { user, profile: userData };
+                    user_type: userData.user_type
+                }
+            };
 
         } catch (error) {
             console.error('❌ Registration failed:', error);
@@ -92,14 +110,20 @@ class SupabaseService {
     // Login user
     async loginUser(email, password) {
         try {
-            const { data: authData, error: authError } = await this.supabase.auth.signInWithPassword({
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
 
-            if (authError) throw authError;
+            if (error) {
+                throw error;
+            }
 
-            const user = authData.user;
+            const user = data.user;
 
             // Get user profile from database
             const { data: profile, error: profileError } = await this.supabase
@@ -108,10 +132,18 @@ class SupabaseService {
                 .eq('id', user.id)
                 .single();
 
-            if (profileError) throw profileError;
-
-            if (!profile) {
-                throw new Error('User profile not found');
+            if (profileError) {
+                console.error('Profile fetch error:', profileError);
+                // Return basic user data if profile not found
+                return { 
+                    user, 
+                    profile: {
+                        id: user.id,
+                        email: user.email,
+                        full_name: user.user_metadata?.full_name || '',
+                        user_type: user.user_metadata?.user_type || 'renter'
+                    }
+                };
             }
 
             console.log('✅ User logged in successfully:', user.id);
@@ -126,9 +158,15 @@ class SupabaseService {
     // Logout user
     async logoutUser() {
         try {
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
             const { error } = await this.supabase.auth.signOut();
-            if (error) throw error;
-            
+            if (error) {
+                throw error;
+            }
+
             this.currentUser = null;
             console.log('✅ User logged out successfully');
         } catch (error) {
@@ -144,43 +182,52 @@ class SupabaseService {
 
     // Get current user profile
     async getCurrentUserProfile() {
-        if (!this.currentUser) {
+        if (!this.currentUser || !this.supabase) {
             return null;
         }
 
         try {
-            const { data: profile, error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', this.currentUser.id)
                 .single();
 
-            if (error) throw error;
-            return profile;
+            if (error) {
+                console.error('❌ Error getting user profile:', error);
+                return null;
+            }
+
+            return data;
         } catch (error) {
             console.error('❌ Error getting user profile:', error);
-            throw error;
+            return null;
         }
     }
 
     // Update user profile
     async updateUserProfile(updates) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
-            const { error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('profiles')
                 .update({
                     ...updates,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', this.currentUser.id);
+                .eq('id', this.currentUser.id)
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
             console.log('✅ User profile updated successfully');
+            return data;
         } catch (error) {
             console.error('❌ Error updating user profile:', error);
             throw error;
@@ -191,27 +238,30 @@ class SupabaseService {
 
     // Create new car
     async createCar(carData) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
-            const { data: car, error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('cars')
-                .insert({
-                    owner_id: this.currentUser.id,
-                    ...carData,
-                    created_at: new Date().toISOString(),
-                    is_available: true,
-                    status: 'active'
-                })
+                .insert([
+                    {
+                        owner_id: this.currentUser.id,
+                        ...carData,
+                        is_available: true,
+                        status: 'active'
+                    }
+                ])
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            console.log('✅ Car created successfully:', car.id);
-            return car;
+            console.log('✅ Car created successfully:', data.id);
+            return data;
 
         } catch (error) {
             console.error('❌ Error creating car:', error);
@@ -222,14 +272,21 @@ class SupabaseService {
     // Get all cars
     async getAllCars() {
         try {
-            const { data: cars, error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('cars')
                 .select('*')
-                .eq('status', 'active');
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return cars || [];
+            return data || [];
 
         } catch (error) {
             console.error('❌ Error getting cars:', error);
@@ -240,19 +297,26 @@ class SupabaseService {
     // Get cars by owner
     async getCarsByOwner(ownerId = null) {
         try {
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
             const userId = ownerId || this.currentUser?.id;
             if (!userId) {
                 throw new Error('No user ID provided');
             }
 
-            const { data: cars, error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('cars')
                 .select('*')
-                .eq('owner_id', userId);
+                .eq('owner_id', userId)
+                .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return cars || [];
+            return data || [];
 
         } catch (error) {
             console.error('❌ Error getting cars by owner:', error);
@@ -263,15 +327,21 @@ class SupabaseService {
     // Get car by ID
     async getCarById(carId) {
         try {
-            const { data: car, error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('cars')
                 .select('*')
                 .eq('id', carId)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return car;
+            return data;
 
         } catch (error) {
             console.error('❌ Error getting car:', error);
@@ -281,22 +351,28 @@ class SupabaseService {
 
     // Update car
     async updateCar(carId, updates) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
-            const { error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('cars')
                 .update({
                     ...updates,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', carId);
+                .eq('id', carId)
+                .eq('owner_id', this.currentUser.id)
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
             console.log('✅ Car updated successfully:', carId);
+            return data;
 
         } catch (error) {
             console.error('❌ Error updating car:', error);
@@ -306,17 +382,20 @@ class SupabaseService {
 
     // Delete car
     async deleteCar(carId) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
             const { error } = await this.supabase
                 .from('cars')
                 .delete()
-                .eq('id', carId);
+                .eq('id', carId)
+                .eq('owner_id', this.currentUser.id);
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
             console.log('✅ Car deleted successfully:', carId);
 
@@ -330,26 +409,29 @@ class SupabaseService {
 
     // Create new booking
     async createBooking(bookingData) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
-            const { data: booking, error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('bookings')
-                .insert({
-                    renter_id: this.currentUser.id,
-                    ...bookingData,
-                    created_at: new Date().toISOString(),
-                    status: 'pending'
-                })
+                .insert([
+                    {
+                        renter_id: this.currentUser.id,
+                        ...bookingData,
+                        status: 'pending'
+                    }
+                ])
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            console.log('✅ Booking created successfully:', booking.id);
-            return booking;
+            console.log('✅ Booking created successfully:', data.id);
+            return data;
 
         } catch (error) {
             console.error('❌ Error creating booking:', error);
@@ -359,20 +441,23 @@ class SupabaseService {
 
     // Get bookings by user
     async getBookingsByUser(userType = 'renter') {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
             const queryField = userType === 'owner' ? 'owner_id' : 'renter_id';
-            const { data: bookings, error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('bookings')
                 .select('*')
-                .eq(queryField, this.currentUser.id);
+                .eq(queryField, this.currentUser.id)
+                .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return bookings || [];
+            return data || [];
 
         } catch (error) {
             console.error('❌ Error getting bookings:', error);
@@ -382,22 +467,27 @@ class SupabaseService {
 
     // Update booking status
     async updateBookingStatus(bookingId, status) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
-            const { error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('bookings')
                 .update({
                     status: status,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', bookingId);
+                .eq('id', bookingId)
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
             console.log('✅ Booking status updated:', bookingId, status);
+            return data;
 
         } catch (error) {
             console.error('❌ Error updating booking status:', error);
@@ -409,8 +499,8 @@ class SupabaseService {
 
     // Upload car photo
     async uploadCarPhoto(carId, file) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
+        if (!this.currentUser || !this.supabase) {
+            throw new Error('No user logged in or Supabase not available');
         }
 
         try {
@@ -421,7 +511,9 @@ class SupabaseService {
                 .from('car-photos')
                 .upload(fileName, file);
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                throw uploadError;
+            }
 
             // Get public URL
             const { data: urlData } = this.supabase.storage
@@ -429,19 +521,22 @@ class SupabaseService {
                 .getPublicUrl(fileName);
 
             // Save photo reference to database
-            const { data: photoData, error: dbError } = await this.supabase
+            const { data: photoData, error: photoError } = await this.supabase
                 .from('car_photos')
-                .insert({
-                    car_id: carId,
-                    url: urlData.publicUrl,
-                    filename: fileName,
-                    uploaded_by: this.currentUser.id,
-                    created_at: new Date().toISOString()
-                })
+                .insert([
+                    {
+                        car_id: carId,
+                        url: urlData.publicUrl,
+                        filename: fileName,
+                        uploaded_by: this.currentUser.id
+                    }
+                ])
                 .select()
                 .single();
 
-            if (dbError) throw dbError;
+            if (photoError) {
+                throw photoError;
+            }
 
             console.log('✅ Car photo uploaded successfully:', urlData.publicUrl);
             return photoData;
@@ -455,60 +550,24 @@ class SupabaseService {
     // Get car photos
     async getCarPhotos(carId) {
         try {
-            const { data: photos, error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('car_photos')
                 .select('*')
-                .eq('car_id', carId);
+                .eq('car_id', carId)
+                .order('created_at', { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return photos || [];
+            return data || [];
 
         } catch (error) {
             console.error('❌ Error getting car photos:', error);
-            throw error;
-        }
-    }
-
-    // Delete car photo
-    async deleteCarPhoto(photoId) {
-        if (!this.currentUser) {
-            throw new Error('No user logged in');
-        }
-
-        try {
-            // Get photo data first
-            const { data: photo, error: getError } = await this.supabase
-                .from('car_photos')
-                .select('*')
-                .eq('id', photoId)
-                .single();
-
-            if (getError) throw getError;
-
-            if (!photo) {
-                throw new Error('Photo not found');
-            }
-
-            // Delete from storage
-            const { error: storageError } = await this.supabase.storage
-                .from('car-photos')
-                .remove([photo.filename]);
-
-            if (storageError) throw storageError;
-
-            // Delete from database
-            const { error: dbError } = await this.supabase
-                .from('car_photos')
-                .delete()
-                .eq('id', photoId);
-
-            if (dbError) throw dbError;
-
-            console.log('✅ Car photo deleted successfully:', photoId);
-
-        } catch (error) {
-            console.error('❌ Error deleting car photo:', error);
             throw error;
         }
     }
@@ -518,20 +577,27 @@ class SupabaseService {
     // Create notification
     async createNotification(notificationData) {
         try {
-            const { data: notification, error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('notifications')
-                .insert({
-                    ...notificationData,
-                    created_at: new Date().toISOString(),
-                    is_read: false
-                })
+                .insert([
+                    {
+                        ...notificationData,
+                        is_read: false
+                    }
+                ])
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            console.log('✅ Notification created successfully:', notification.id);
-            return notification;
+            console.log('✅ Notification created successfully:', data.id);
+            return data;
 
         } catch (error) {
             console.error('❌ Error creating notification:', error);
@@ -542,14 +608,21 @@ class SupabaseService {
     // Get user notifications
     async getUserNotifications(userId) {
         try {
-            const { data: notifications, error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('notifications')
                 .select('*')
-                .eq('user_id', userId);
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
-            return notifications || [];
+            return data || [];
 
         } catch (error) {
             console.error('❌ Error getting notifications:', error);
@@ -560,86 +633,31 @@ class SupabaseService {
     // Mark notification as read
     async markNotificationAsRead(notificationId) {
         try {
-            const { error } = await this.supabase
+            if (!this.supabase) {
+                throw new Error('Supabase not available');
+            }
+
+            const { data, error } = await this.supabase
                 .from('notifications')
                 .update({
                     is_read: true,
                     read_at: new Date().toISOString()
                 })
-                .eq('id', notificationId);
+                .eq('id', notificationId)
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
 
             console.log('✅ Notification marked as read:', notificationId);
+            return data;
 
         } catch (error) {
             console.error('❌ Error marking notification as read:', error);
             throw error;
         }
-    }
-
-    // ==================== REAL-TIME LISTENERS ====================
-
-    // Listen to user data changes
-    onUserDataChange(userId, callback) {
-        return this.supabase
-            .channel(`profiles:${userId}`)
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
-                (payload) => {
-                    callback(payload.new ? { id: userId, ...payload.new } : null);
-                }
-            )
-            .subscribe();
-    }
-
-    // Listen to cars changes
-    onCarsChange(callback) {
-        return this.supabase
-            .channel('cars')
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'cars' },
-                (payload) => {
-                    // Get all cars when there's a change
-                    this.getAllCars().then(callback);
-                }
-            )
-            .subscribe();
-    }
-
-    // Listen to bookings changes
-    onBookingsChange(userId, userType, callback) {
-        const queryField = userType === 'owner' ? 'owner_id' : 'renter_id';
-        
-        return this.supabase
-            .channel(`bookings:${userId}`)
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'bookings', filter: `${queryField}=eq.${userId}` },
-                (payload) => {
-                    // Get updated bookings when there's a change
-                    this.getBookingsByUser(userType).then(callback);
-                }
-            )
-            .subscribe();
-    }
-
-    // Listen to notifications changes
-    onNotificationsChange(userId, callback) {
-        return this.supabase
-            .channel(`notifications:${userId}`)
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
-                (payload) => {
-                    // Get updated notifications when there's a change
-                    this.getUserNotifications(userId).then(callback);
-                }
-            )
-            .subscribe();
-    }
-
-    // Cleanup listeners
-    off(channel) {
-        this.supabase.removeChannel(channel);
     }
 
     // ==================== UTILITY METHODS ====================
@@ -664,14 +682,54 @@ class SupabaseService {
         }
     }
 
-    // Generate unique ID
-    generateId() {
-        return crypto.randomUUID();
-    }
-
     // Format timestamp
     formatTimestamp(timestamp) {
         return new Date(timestamp).toLocaleString('ar-SA');
+    }
+
+    // ==================== FALLBACK METHODS ====================
+
+    // Fallback to localStorage when Supabase is not available
+    async registerUserFallback(userData) {
+        try {
+            // Check if email already exists
+            const existingUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+            const emailExists = existingUsers.find(user => user.email === userData.email);
+            
+            if (emailExists) {
+                throw new Error('البريد الإلكتروني مستخدم بالفعل');
+            }
+            
+            // Create user object
+            const newUser = {
+                id: 'user-' + Date.now(),
+                full_name: userData.full_name,
+                email: userData.email,
+                phone: userData.phone,
+                city: userData.city,
+                password: userData.password,
+                user_type: userData.user_type,
+                created_at: new Date().toISOString(),
+                is_active: true
+            };
+            
+            // Add user to localStorage
+            existingUsers.push(newUser);
+            localStorage.setItem('mockUsers', JSON.stringify(existingUsers));
+            
+            // Create mock token
+            const token = 'mock-token-' + Date.now();
+            localStorage.setItem('userToken', token);
+            localStorage.setItem('userData', JSON.stringify(newUser));
+            localStorage.setItem('userType', userData.user_type);
+            
+            console.log('✅ User registered successfully with localStorage fallback:', newUser.id);
+            return { user: { uid: newUser.id }, profile: newUser };
+            
+        } catch (error) {
+            console.error('❌ localStorage registration failed:', error);
+            throw error;
+        }
     }
 }
 
@@ -685,7 +743,3 @@ window.supabaseService = supabaseService;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Supabase Service ready');
 });
-
-
-
-
