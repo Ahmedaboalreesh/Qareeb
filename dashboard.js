@@ -26,12 +26,27 @@ async function loadDashboardData() {
         // Get data from localStorage
         const carsData = JSON.parse(localStorage.getItem('mockCars') || '[]');
         const bookingsData = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const currentUserId = userData && userData.id ? userData.id : null;
         
-        // Calculate stats
+        // Filter data for current owner (if available)
+        const ownerCars = currentUserId
+            ? carsData.filter(car => car && car.owner_id === currentUserId)
+            : carsData;
+
+        // Filter bookings that belong to the owner's cars
+        const ownerBookings = currentUserId
+            ? bookingsData.filter(booking => {
+                const bookingCar = carsData.find(c => c && c.id === booking.car_id);
+                return bookingCar && bookingCar.owner_id === currentUserId;
+            })
+            : bookingsData;
+
+        // Calculate stats scoped to current owner
         const stats = {
-            cars_count: carsData.length,
-            active_bookings: bookingsData.filter(booking => booking.status === 'pending' || booking.status === 'approved').length,
-            monthly_earnings: bookingsData
+            cars_count: ownerCars.length,
+            active_bookings: ownerBookings.filter(booking => booking.status === 'pending' || booking.status === 'approved').length,
+            monthly_earnings: ownerBookings
                 .filter(booking => booking.status === 'completed')
                 .reduce((total, booking) => total + (booking.total_amount || 0), 0)
         };
